@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Solicitacao {
+  id           Int      @id @default(autoincrement())
+  id_sistema   Int
+  id_dev       Int
+  usuario      String   @default("")
+  dataCriacao  DateTime
+  tipo         String   @default("")
+  criticidade  String   @default("")
+  titulo       String   @default("")
+  reproduzivel Boolean  @default(true)
+  descricao    String   @default("")
+  sugestao     String   @default("")
+
+  area          String    @default("")
+  encaminhado   String    @default("")
+  comentarios   String    @default("")
+  status        String    @default("")
+  prioridade    String    @default("")
+  complexidade  String    @default("")
+  resolucao     String    @default("")
+  resolvido_por String?
+  resolvido_em  DateTime?
+  testado_por   String?
+  testado_em    DateTime?
+  deferido      Boolean   @default(false)
+  deleted       Boolean   @default(false)
+  sistema       Sistema   @relation(fields: [id_sistema], references: [id])
+
+  @@map("solicitacao")
+}
+
+model Sistema {
+  id             Int           @id @default(autoincrement())
+  id_responsavel Int?
+  id_reserva     Int?
+  nome           String        @default("")
+  banco          String        @default("")
+  ip             String        @default("")
+  ip_homolog     String?       @default("")
+  servidor       String        @default("")
+  tecnologia     String        @default("")
+  responsavel    Dev?          @relation("Responsavel", fields: [id_responsavel], references: [id])
+  reserva        Dev?          @relation("Reserva", fields: [id_reserva], references: [id])
+  ativo          Boolean?      @default(true)
+  deleted        Boolean       @default(false)
+  solicitacoes   Solicitacao[]
+
+  @@map("sistema")
+}
+
+model Dev {
+  id               Int       @id @default(autoincrement())
+  nome             String
+  matricula        Int
+  sistemas         Sistema[] @relation("Responsavel")
+  sistemas_reserva Sistema[] @relation("Reserva")
+  ativo            Boolean   @default(true)
+  deleted          Boolean   @default(false)
+
+  @@map("dev")
+}
+
+model User {
+  id           Int     @id @default(autoincrement())
+  name         String
+  username     String
+  email        String
+  password     String? @default("")
+  alterarSenha Boolean
+  active       Boolean
+  deleted      Boolean @default(false)
+
+  @@map("users")
+}

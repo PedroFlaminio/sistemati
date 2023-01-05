@@ -1,0 +1,19 @@
+.formbuilder-fields-empty {
+  border: 3px dashed #ccc;
+  min-height: 200;
+  display: flex;
+  max-width: 600;
+  align-items: center;
+  justify-content: center;
+}
+.fb-icon {
+  height: 18px;
+  width: 18px;
+}
+.fb-option {
+  border: 1px solid #ccc !important;
+}
+.fb-frame {
+  min-height: 200;
+  border-radius: 20;
+}

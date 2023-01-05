@@ -1,0 +1,117 @@
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "success":    $success,
+  "warning":    $warning,
+  "danger":     $danger,
+  "orange":     $orange,
+  "info":       $info,
+  "light-warning":    $light-warning,
+  "light-danger":     $light-danger,
+  "light-success":     $light-success,
+  "dark-warning":    $dark-warning,
+  "dark-danger":     $dark-danger,
+  "dark-success":     $dark-success,
+  "light":      $light,
+  "lighter":    $lighter,
+  "dark":       $dark,
+  "purple":     $purple,
+) !default;
+
+
+$enable-negative-margins: true;
+$body-bg: #FFF;
+
+// Options
+
+//$enable-rounded: false !default;
+
+// Body
+
+$body-color: $gray-700 !default;
+
+// Links
+
+$link-hover-color: $primary !default;
+
+// Fonts
+
+$font-size-base: 0.875rem !default;
+
+// Tables
+
+$table-border-color: rgba(0, 0, 0, 0.05) !default;
+
+// Forms
+
+$input-focus-border-color: $primary !default;
+$input-disabled-bg:        $navy-300 !default;
+
+// Dropdowns
+
+$dropdown-link-color: $gray-700 !default;
+$dropdown-link-hover-color: $white !default;
+$dropdown-link-hover-bg: $primary !default;
+
+// Navs
+
+$nav-tabs-border-color: $gray-300 !default;
+$nav-tabs-link-hover-border-color: $primary !default;
+
+// Navbar
+
+$navbar-padding-y: 0.2rem !default;
+$navbar-dark-hover-color: rgba($white, 0.9) !default;
+$navbar-dark-active-color: rgba($white, 0.9) !default;
+$navbar-light-color: rgba($black, 0.4) !default;
+$navbar-light-active-color: rgba($black, 0.7) !default;
+$navbar-light-disabled-color: rgba($black, 0.2) !default;
+
+// Progress bars
+
+$progress-bg: $gray-300 !default;
+$progress-bar-bg: $primary !default;
+
+// List group
+
+$list-group-bg: $gray-900 !default;
+$list-group-border-color: transparent !default;
+$list-group-hover-bg: lighten($list-group-bg, 10%) !default;
+$list-group-active-color: $white !default;
+$list-group-active-bg: $list-group-bg !default;
+$list-group-disabled-color: lighten($list-group-bg, 30%) !default;
+
+.striped-warning {
+    background: repeating-linear-gradient(135deg, $warning, $warning 10px, darken($warning, 25%) 10px, darken($warning, 25%) 20px);  
+}
+.striped-danger {
+    background: repeating-linear-gradient(135deg, $danger, $danger 10px, darken($danger, 25%) 10px, darken($danger, 25%) 20px);
+}
+.dark-warning {
+    background: darken($warning, 25%);  
+}
+.dark-danger {
+    background: darken($danger, 25%);  
+}
+.dark-succes {
+    background: darken($success, 25%);  
+}
+.light-success {
+    background: lighten($success, 10%);  
+}
+.light-warning {
+    background: lighten($warning, 10%);  
+}
+.light-danger {
+    background: lighten($danger, 10%);  
+}
+.min-450 {
+    min-width: 450px;  
+}
+.home-bg {
+    background: repeating-linear-gradient(135deg, $primary, $primary 90px, darken($primary, 25%) 90px, darken($primary, 25%) 100px);
+}
+.table-bg-primary{
+    background: #cecef6;
+    border: solid 1.5px #B9B9DD;
+}

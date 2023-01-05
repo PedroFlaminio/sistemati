@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "front",
+      "path": "front"
+    },
+    {
+      "name": "node-api",
+      "path": "node-api"
+    }
+  ],
+  "settings": {
+    "workbench.colorCustomizations": {
+      "statusBar.background": "#001c79",
+      "statusBar.foreground": "#FFF",
+      "statusBarItem.hoverBackground": "#001c79"
+    },
+    "peacock.color": "#001c79"
+  }
+}

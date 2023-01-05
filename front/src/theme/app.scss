@@ -1,0 +1,16 @@
+// Import Bootstrap and its default variables
+@import "./base-colors.scss";
+
+$primary: $navy !default;
+$secondary: lighten($navy, 25%) !default;
+$orange: $orange !default;
+$gray: #444 !default;
+$light: $navy-200 !default;
+$lighter: $navy-100 !default;
+$dark: $navy-900 !default;
+$purple: $purple !default;
+
+@import "./base-classes.scss";
+@import "./base-theme.scss";
+@import "./node_modules/bootstrap/scss/bootstrap.scss";
+@import "./formBuilder.scss";
