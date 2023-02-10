@@ -4,7 +4,7 @@ import useApp, { Modulo } from "./AppContext";
 import { useAlert } from "react-alert";
 import { ModuleItem } from "../components/Module/context";
 import axios from "axios";
-import { ApiURL, ApiStageURL } from "../configs";
+import { ApiURL } from "../configs";
 import { clearData } from "../utils/functions";
 import { useNavigate } from "react-router-dom";
 
@@ -58,7 +58,6 @@ type ApiContextProviderProps = {
 };
 
 export const ApiContextProvider = (props: ApiContextProviderProps) => {
-  const BaseURL = !process.env.NODE_ENV || process.env.NODE_ENV === "development" ? ApiStageURL : ApiURL;
   const { setLoading, setUsuario } = useApp();
   const alert = useAlert();
   const navigator = useNavigate();
@@ -76,7 +75,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     localStorage.setItem("token-sistemati", JSON.stringify({ token }));
   };
   const api = axios.create({
-    baseURL: BaseURL,
+    baseURL: ApiURL,
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   api.interceptors.response.use(
@@ -86,7 +85,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     function (error) {
       var status = error.response.status;
       var resBaseURL = error.response.config.baseURL;
-      if (resBaseURL === BaseURL && (status === 401 || status === 403)) {
+      if (resBaseURL === ApiURL && (status === 401 || status === 403)) {
         clearData();
         navigator("login");
       }

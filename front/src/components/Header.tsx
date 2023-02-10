@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { menus, versao } from "../configs";
+import { IntegratiURL, menus, versao } from "../configs";
 import useApp from "../context/AppContext";
 import DropDownButton from "./Module/dropdownButton";
 import DropDownItem from "./Module/dropdownItem";
@@ -14,7 +14,7 @@ const Header = () => {
   const { setMode } = useModule();
   const handleSair = () => {
     signOff();
-    navigate("/login");
+    window.location.href = IntegratiURL;
   };
 
   return (
