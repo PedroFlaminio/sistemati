@@ -1,5 +1,7 @@
 import * as bcrypt from "bcrypt";
 import { decode } from "jsonwebtoken";
+import { User, UserIntegrati } from "./types";
+import jwtDecode from "jwt-decode";
 
 export const Encrypt = {
   cryptPassword: (password: string) =>
@@ -10,10 +12,19 @@ export const Encrypt = {
 
   comparePassword: (password: string, hashPassword: string) => bcrypt.compare(password, hashPassword).then((resp) => resp),
 };
-export const getUserId = (auth: string) =>
-  (decode(auth.replace("Bearer ", "")) as { user_id: string; nome: string; iat: number; exp: number }).user_id;
-export const getUserName = (auth: string) =>
-  (decode(auth.replace("Bearer ", "")) as { user_id: string; nome: string; iat: number; exp: number }).nome;
+
+export const getUserId = (auth: string) => jwtDecode<UserIntegrati>(auth.replace("Bearer ", "")).id;
+export const getUserName = (auth: string) => jwtDecode<UserIntegrati>(auth.replace("Bearer ", "")).username;
+export const getRoleModulo = (auth: string, modulo: string) =>
+  jwtDecode<UserIntegrati>(auth.replace("Bearer ", "")).acessos.find((a) => a.modulo === modulo).role || "";
+export const getUser = (auth: string) => {
+  const decoded = jwtDecode<UserIntegrati>(auth);
+  const { sub, exp, iat, expoKey, ...otheProps } = decoded;
+  const role = decoded.acessos.find((m) => m.modulo === "sistemati")?.role || "USUARIO";
+  const user: User = { ...otheProps, role };
+  return user;
+  // (decode(auth.replace("Bearer ", "")) as { user_id: string; nome: string; iat: number; exp: number }).nome;
+};
 export const getTokenEmail = () => Math.random().toString(36).slice(2).substring(2, 6).toUpperCase();
 export const dateBrToEua = (stringDate: string) => {
   if (stringDate === null || stringDate === undefined || stringDate === "") return "";

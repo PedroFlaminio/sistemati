@@ -48,6 +48,7 @@ export const AppContextProvider = (props: AppContextProviderProps) => {
     setLoad(active);
   };
   const verificaUser = () => {
+    console.log(usuario);
     if (!isJwtExpired(usuario.accessToken || "")) return true;
     else {
       clearData();

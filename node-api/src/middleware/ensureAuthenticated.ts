@@ -6,7 +6,7 @@ interface IPayload {
 }
 
 export function ensureAuthenticated(request: Request, response: Response, next: NextFunction) {
-  return next();
+  //return next();
   const authToken = request.headers.authorization;
 
   if (!authToken) {

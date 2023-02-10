@@ -5,22 +5,24 @@ import List from "../components/Module/list";
 import useModule from "../components/Module/context";
 import Form from "../components/Module/form";
 import Input from "../components/Module/input";
-import Table, { SearchRule, TableColumn } from "../components/Module/table";
+import Table, { FilterRule, SearchRule, TableColumn } from "../components/Module/table";
 import FilterInput from "../components/Module/filterInput";
 import useApi from "../context/ApiContext";
 import yup from "../utils/schemas";
 import useApp from "../context/AppContext";
 import Button from "../components/Module/button";
 import Checkbox from "../components/Module/checkbox";
+import FilterSelect from "../components/Module/filterSelect";
 
 const DevsSchema = yup.object().shape({
   nome: yup.string().required().label("Nome"),
-  endereco: yup.string().required().label("Endereço"),
+  matricula: yup.string().required().label("Matrícula"),
 });
 
 const Devs = () => {
   const [devs, setDevs] = useState<Dev[]>([]);
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
+  const [filterStatus, setFilterStatus] = useState<FilterRule | undefined>({ field: "ativo", data: "true", operation: "CN", type: "S" });
   const { getDevs, postDev, putDev, deleteDev, loaded } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
@@ -42,7 +44,7 @@ const Devs = () => {
     const { setMode, setItem, mode, item } = useModule();
     const handleNew = () => {
       setItem({} as Dev);
-      setItem({ id: "Novo" });
+      setItem({ id: "Novo", ativo: true });
       setMode("Insert");
     };
     const handleEdit = () => {
@@ -65,7 +67,6 @@ const Devs = () => {
       <>
         <Button className="rounded-0" label="Novo" icon="new" disabled={cantInsert} onClick={handleNew} />
         <Button className="rounded-0" label="Editar" icon="edit" disabled={cantEdit} onClick={handleEdit} />
-        <Button className="rounded-0" label="Excluir" icon="delete" disabled={cantEdit} onClick={handleDelete} />
         <Button className="rounded-top-right" label="Visualizar" icon="view" disabled={cantView} onClick={handleView} />
       </>
     );
@@ -73,12 +74,26 @@ const Devs = () => {
   const Filtros = () => {
     const handleSearchChange = (value: string) => {
       if (value !== "") {
-        const searchFilter: SearchRule = { fields: ["id", "nome", "username"], data: value, op: "CT" };
+        const searchFilter: SearchRule = { fields: ["id", "nome", "matricula"], data: value, op: "CT" };
         setFilterSearch(searchFilter);
       } else setFilterSearch(undefined);
     };
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      if (e.currentTarget.value !== "") {
+        const newFilter: FilterRule = { field: "ativo", data: e.currentTarget.value, operation: "CN", type: "S" };
+        setFilterStatus(newFilter);
+      } else setFilterStatus(undefined);
+    };
     return (
       <div className="row row-cols-auto p-2 bg-light border-light border rounded-bottom mx-0 justify-content-end">
+        <FilterSelect
+          size={2}
+          label="Status"
+          onChange={handleStatusChange}
+          options={["Todos", "Ativos", "Inativos"]}
+          values={["", "true", "false"]}
+          value={filterStatus?.data}
+        />
         <FilterInput placeholder="Pesquisar..." defaultValue={filterSearch?.data} handleBtnClick={handleSearchChange} />
       </div>
     );
@@ -108,6 +123,7 @@ const Devs = () => {
         handleDoubleClick={handleDbClick}
         footer={Filtros}
         searchFilter={filterSearch}
+        filters={[filterStatus]}
         order="nome"
         orderAsc={true}
       />

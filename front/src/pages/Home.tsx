@@ -1,6 +1,6 @@
 import Page from "../components/Page";
 import logoUrbam from "../assets/logo_urbam.png";
-import agenda from "../assets/calendario.png";
+import keyboard from "../assets/keyboard.jpg";
 
 const Home = () => {
   return (
@@ -13,7 +13,7 @@ const Home = () => {
             <img src={logoUrbam} alt="logotipo" />
           </div>
         </div>
-        <div className="col-6 bg-secondary p-0" style={{ backgroundImage: `url(${agenda})`, backgroundSize: "cover" }}></div>
+        <div className="col-6 bg-secondary p-0" style={{ backgroundImage: `url(${keyboard})`, backgroundSize: "cover" }}></div>
       </div>
     </Page>
   );

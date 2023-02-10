@@ -8,7 +8,6 @@ import { transitions, positions, Provider as AlertProvider } from "react-alert";
 import Login from "./pages/Login";
 import { ApiContextProvider } from "./context/ApiContext";
 import AlertTemplate from "./components/AlertTemplate";
-import Usuarios from "./pages/Usuarios";
 import AlterarSenha from "./pages/AlterarSenha";
 import Devs from "./pages/Desenvolvedores";
 import Sistemas from "./pages/Sistemas";
@@ -43,13 +42,14 @@ const Rotas = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/usuarios" element={<Usuarios />} />
+              <Route path="/login/:jwt" element={<Login />} />
               <Route path="/alterarSenha" element={<AlterarSenha />} />
               <Route path="/devs" element={<Devs />} />
               <Route path="/sistemas" element={<Sistemas />} />
-              <Route path="/solicitacoes" element={<Solicitacoes />} />
-              <Route path="/usuarios" element={<Usuarios />} />
+              <Route path="/solicitacoes/:id" element={<Solicitacoes tipo="Pendentes" />} />
+              <Route path="/minhasSolicitacoes" element={<Solicitacoes tipo="Minhas" />} />
+              <Route path="/solicitacoes" element={<Solicitacoes tipo="Pendentes" />} />
+              <Route path="/solicitacoesResolvidas" element={<Solicitacoes tipo="Resolvidas" />} />
             </Routes>
           </ApiContextProvider>
         </AlertProvider>

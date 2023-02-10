@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { router } from "./routes";
 import bodyParser from "body-parser";
 
+process.env.TZ = "America/Montreal";
 const app = express();
 
 const serverHttp = http.createServer(app);

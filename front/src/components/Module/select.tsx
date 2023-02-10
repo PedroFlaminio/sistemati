@@ -31,8 +31,6 @@ const Select = (props: SelectProps) => {
   }, [item]);
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     SetItemProp(item, field, e.target.value);
-    console.log(e.target.value);
-    console.log(item);
     setItem({ ...item });
     setSelectValue(e.target.value);
     setInvalid(false);

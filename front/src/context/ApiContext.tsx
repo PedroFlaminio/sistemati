@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { User, Dev, Sistema, Solicitacao } from "../utils/types";
+import { User, Dev, Sistema, Solicitacao, Email } from "../utils/types";
 import useApp, { Modulo } from "./AppContext";
 import { useAlert } from "react-alert";
 import { ModuleItem } from "../components/Module/context";
@@ -9,6 +9,7 @@ import { clearData } from "../utils/functions";
 import { useNavigate } from "react-router-dom";
 
 type ApiType = {
+  setToken: (token: string) => void;
   //AUTH
   login: (username: string, password: string, callback: (user: User) => any) => void;
   logout: (callback: () => any) => void;
@@ -16,6 +17,7 @@ type ApiType = {
   resetarSenha: (id: number) => void;
   //DEVS
   getDevs: (callback: (list: Dev[]) => any) => Promise<void>;
+  getDevsAtivos: (callback: (list: Dev[]) => any) => Promise<void>;
   postDev: (dev: Dev, callback: () => any) => Promise<void>;
   putDev: (dev: Dev, callback: () => any) => Promise<void>;
   deleteDev: (dev: Dev, callback: () => any) => Promise<void>;
@@ -25,9 +27,12 @@ type ApiType = {
   putSistema: (dev: Sistema, callback: () => any) => Promise<void>;
   deleteSistema: (dev: Sistema, callback: () => any) => Promise<void>;
   //SOLICITACOES
+  getSolicitacaoById: (id: number, callback: (solicitacao: Solicitacao) => any) => Promise<void>;
   getSolicitacoes: (callback: (list: Solicitacao[]) => any) => Promise<void>;
-  postSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
-  putSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
+  getSolicitacoesResolvidas: (callback: (list: Solicitacao[]) => any) => Promise<void>;
+  getSolicitacoesByUser: (callback: (list: Solicitacao[]) => any) => Promise<void>;
+  postSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
+  putSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   deleteSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
   //USUARIO
   getUsuarios: (callback: (item: User[]) => any) => void;
@@ -40,6 +45,9 @@ type ApiType = {
   deleteUsuario: (user: User, callback: () => any) => void;
   listaLideres: (callback: (item: ModuleItem[]) => any) => void;
   alterarSenhaUsuario: (id_user: number) => void;
+
+  //E-MAIL
+  postEmail: (email: Email, callback: () => any) => void;
 
   loaded: boolean;
 };
@@ -146,6 +154,21 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     setLoading(true);
     api
       .get("devs")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const getDevsAtivos = async (callback: (list: Dev[]) => {}) => {
+    setLoading(true);
+    api
+      .get("devsinativos")
       .then((resp) => {
         callback(resp.data);
         if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
@@ -281,7 +304,22 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
-  //SISTEMAS
+  //SOLICITAÇÕES
+  const getSolicitacaoById = async (id: number, callback: (solicitacao: Solicitacao) => any) => {
+    setLoading(true);
+    api
+      .get("solicitacoes/" + id.toString())
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
   const getSolicitacoes = async (callback: (list: Solicitacao[]) => {}) => {
     setLoading(true);
     api
@@ -297,17 +335,14 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
-  const postSolicitacao = async (solicitacao: Solicitacao, callback: () => any) => {
+  const getSolicitacoesResolvidas = async (callback: (list: Solicitacao[]) => {}) => {
     setLoading(true);
     api
-      .post("solicitacoes", solicitacao)
+      .get("solicitacoesResolvidas")
       .then((resp) => {
-        setLoading(false);
-        if (resp.status === 200) {
-          alert.success(resp.data.message);
-          callback();
-        }
+        callback(resp.data);
         if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
       })
       .catch((error) => {
         setLoading(false);
@@ -315,10 +350,43 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
-  const putSolicitacao = async (solicitacao: Solicitacao, callback: () => any) => {
+  const getSolicitacoesByUser = async (callback: (list: Solicitacao[]) => {}) => {
     setLoading(true);
     api
-      .put("solicitacoes/", solicitacao)
+      .get("solicitacoesByUser")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const postSolicitacao = async (solicitacao: FormData, callback: () => any) => {
+    setLoading(true);
+    api
+      .post("solicitacoes", solicitacao)
+      .then((resp) => {
+        if (resp.status === 200) {
+          alert.success(resp.data.message);
+          callback();
+        }
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const putSolicitacao = async (solicitacao: FormData, callback: () => any) => {
+    setLoading(true);
+    api
+      .put("solicitacoes", solicitacao)
       .then((resp) => {
         setLoading(false);
         if (resp.status === 200) {
@@ -336,7 +404,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
   const deleteSolicitacao = async (solicitacao: Solicitacao, callback: () => any) => {
     setLoading(true);
     api
-      .delete("solicitacoes/" + solicitacao.id)
+      .put("solicitacoes/", solicitacao)
       .then((resp) => {
         setLoading(false);
         if (resp.status === 200) {
@@ -542,9 +610,29 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
+
+  const postEmail = (email: any, callback: (list: Email) => {}) => {
+    setLoading(true);
+    api
+      .post("email", email)
+      .then((resp) => {
+        setLoading(false);
+        if (resp.status === 200) {
+          alert.success(resp.data.message);
+          callback(resp.data);
+        }
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.resp.data.status === 400 && error.resp.data) alert.error(error.resp.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
   return (
     <ApiContext.Provider
       value={{
+        setToken,
         //AUTH
         loaded,
         login,
@@ -552,6 +640,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         alterarSenha,
         //DEVS
         getDevs,
+        getDevsAtivos,
         postDev,
         putDev,
         deleteDev,
@@ -561,7 +650,10 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         putSistema,
         deleteSistema,
         //SOLICITACOES
+        getSolicitacaoById,
         getSolicitacoes,
+        getSolicitacoesResolvidas,
+        getSolicitacoesByUser,
         postSolicitacao,
         putSolicitacao,
         deleteSolicitacao,
@@ -577,6 +669,8 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         ativaUsuarioById,
         inativaUsuarioById,
         alterarSenhaUsuario,
+        //E-MAIL
+        postEmail,
       }}
     >
       {props.children}

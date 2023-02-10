@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { SearchOptions } from "../../utils/searchTypes";
 //type ModuleMode = "Insert" | "Edit" | "View" | "List" | "Delete";export
- 
+
 export type ModuleError = {
   field: string;
   error: string;
@@ -15,7 +15,9 @@ type FormType = {
   searchIndex: string;
   index: number;
   update: boolean;
-  setItem: (item: ModuleItem, callback?:() => void) => void;
+  files: FormData;
+  fileList: File[];
+  setItem: (item: ModuleItem, callback?: () => void) => void;
   setMode: (mode: string) => void;
   setList: (list: ModuleItem[]) => void;
   setSearchList: (list: ModuleItem[]) => void;
@@ -32,25 +34,29 @@ type FormType = {
   setPageSize: (pageSize: number) => void;
   setOrder: (order: string) => void;
   setOrderAsc: (orderAsc: boolean) => void;
-  
+  setFiles: (files: FormData) => void;
+  setFilesList: (files: File[]) => void;
+
   options: { [prop: string]: SearchOptions };
   setOptions: (index: string, opt: SearchOptions) => void;
 };
 type ModuleContextProviderProps = {
-  children: ReactNode; 
+  children: ReactNode;
   id: string;
   pageSize?: number;
   order?: string;
   orderAsc?: boolean;
-}
+};
 export const ModuleContext = createContext({} as FormType);
- 
+
 export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   const { children, id } = props;
   const [mode, setMod] = useState<string>("List");
   const [searchIndex, setSearchIndex] = useState("");
   const [searchList, setSearchList] = useState<ModuleItem[]>([]);
   const [item, setIt] = useState<ModuleItem>({});
+  const [files, setFls] = useState<FormData>(new FormData());
+  const [fileList, setFlsList] = useState<File[]>([]);
   const [list, setListModule] = useState<ModuleItem[]>([]);
   const [index, setIndex] = useState(-1);
   const [moduleErrors, setErrors] = useState<ModuleError[]>([]);
@@ -59,7 +65,7 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   const [order, setOrd] = useState(props.order || "id");
   const [orderAsc, setOrdAsc] = useState(props.orderAsc || false);
   const [update, setUpdate] = useState(true);
-  const storedProps = {currentPage,pageSize,order,orderAsc,list,item}
+  const storedProps = { currentPage, pageSize, order, orderAsc, list, item };
   useEffect(() => {
     let JSONObject = localStorage.getItem(id);
     if (JSONObject) {
@@ -74,21 +80,28 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const setItem = (item: ModuleItem, callback?:() => void) => {
+  const setItem = (item: ModuleItem, callback?: () => void) => {
     setIt(item);
-    localStorage.setItem(id, JSON.stringify({ ...storedProps,item  }));
-    if (callback) callback()
-
+    localStorage.setItem(id, JSON.stringify({ ...storedProps, item }));
+    if (callback) callback();
   };
- 
+
+  const setFiles = (files: FormData) => {
+    setFls(files);
+  };
+
+  const setFilesList = (files: File[]) => {
+    setFlsList(files);
+  };
+
   const setList = (list: ModuleItem[]) => {
     setIt(item);
-    localStorage.setItem(id, JSON.stringify({ ...storedProps,list  }));
+    localStorage.setItem(id, JSON.stringify({ ...storedProps, list }));
   };
   const setMode = (mode: string) => {
     setMod(mode);
     //localStorage.setItem(id, JSON.stringify({ item, list, mode }));
-  };  
+  };
   const setCurrentPage = (currentPage: number) => {
     setCurrentPg(currentPage);
     localStorage.setItem(id, JSON.stringify({ ...storedProps, currentPage }));
@@ -107,7 +120,7 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   };
   const setModuleErrors = (errors: ModuleError[]) => {
     setErrors(errors);
-  };  
+  };
   const [options, setOpt] = useState<{ [prop: string]: SearchOptions }>({});
   const setOptions = (index: string, opt: SearchOptions) => {
     const newOptions = options;
@@ -118,7 +131,8 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   return (
     <ModuleContext.Provider
       value={{
-        update,setUpdate,
+        update,
+        setUpdate,
         mode,
         item,
         setItem,
@@ -141,7 +155,12 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
         setIndex,
         moduleErrors,
         setModuleErrors,
-        options,setOptions
+        options,
+        setOptions,
+        files,
+        setFiles,
+        fileList,
+        setFilesList,
       }}
     >
       {children}
@@ -152,5 +171,5 @@ const useModule = () => {
   const value = useContext(ModuleContext);
   return value;
 };
- 
+
 export default useModule;

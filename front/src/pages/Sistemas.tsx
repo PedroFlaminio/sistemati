@@ -13,9 +13,10 @@ import useApp, { Item } from "../context/AppContext";
 import Button from "../components/Module/button";
 import SearchInputList from "../components/Module/searchInputList";
 import Select from "../components/Module/select";
+import TextArea from "../components/Module/textArea";
 
 const SistemasSchema = yup.object().shape({
-  nome: yup.string().required().label("Nome"),
+  // nome: yup.string().required().label("Nome"),
   //endereco: yup.string().required().label("Endereço"),
 });
 
@@ -140,7 +141,6 @@ const Sistemas = () => {
   };
   const ModuleForm = () => {
     const { setMode, setItem, mode, item } = useModule();
-
     const handleCancelar = () => {
       setMode("List");
       setItem({});
@@ -177,9 +177,13 @@ const Sistemas = () => {
           <Input field="ip" label="IP" size={2} />
         </div>
         <div className="input-group">
+          <Input field="servidor" label="Servidor" size={2} />
+
           <Select options={devOptions} values={devValues} field="id_responsavel" label="Responsável" size={3} />
-          <Select options={devOptions} values={devValues} field="id_reserval" label="Reserva" size={3} />
+          <Select options={devOptions} values={devValues} field="id_reserva" label="Reserva" size={3} />
         </div>
+        <TextArea label="Descrição" field="descricao" size={12} />
+        <TextArea label="Observações" field="observacoes" size={12} />
         <div className="d-flex justify-content-end pe-3">
           <div className="btn-group my-3">
             {mode === "View" ? (

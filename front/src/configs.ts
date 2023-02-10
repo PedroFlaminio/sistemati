@@ -6,11 +6,17 @@ type Menu = {
   roles?: string[];
 };
 export const menus: Menu[] = [
-  { label: "Solicitações", path: "/solicitacoes" },
+  { label: "Minhas Solicitações ", path: "/minhasSolicitacoes" },
+  { label: "Solicitações Pendentes", path: "/solicitacoes" },
+  { label: "Solicitações Resolvidas", path: "/solicitacoesResolvidas" },
   { label: "Sistemas", path: "/sistemas" },
   { label: "Devs", path: "/devs" },
-  { label: "Usuarios", path: "/usuarios" },
 ];
+//export const menu: Menu[] = [{ label: "Solicitações ", path: "/solicitacoesbyuser" }];
 
 export const ApiURL = "http://192.168.12.18/sistemati-api/";
-export const ApiStageURL = "http://localhost:8080/sistemati-api";
+export const IntegratiURL = "https://hml.utc.urbamsjc.com.br/";
+// export const ApiStageURL = "http://localhost:8080/sistemati-api";
+
+//export const ApiURL = "http://localhost:5000/sistemati-api/";
+export const ApiStageURL = "http://localhost:8080/sistemati-api/";

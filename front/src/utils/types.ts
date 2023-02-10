@@ -1,21 +1,37 @@
 export type User = {
   id: number;
-  name: string;
+  nome: string;
   username: string;
+  email: string;
   matricula: number;
-  password?: string;
-  alterarSenha: boolean;
+  alterarSenha?: boolean;
   interno: boolean;
   active: boolean;
   role: string;
+  isDev?: boolean;
+  isAdm?: boolean;
   accessToken?: string;
+};
+export type UserIntegrati = {
+  id: number;
+  nome: string;
+  username: string;
+  email: string;
+  matricula: number;
+  expoKey?: string;
+  alterarSenha?: boolean;
+  interno: boolean;
+  active: boolean;
+  acessos: AcessosUser[];
+
+  sub?: string;
+  exp?: number;
+  iat?: number;
 };
 
 export type AcessosUser = {
-  id: number;
-  id_user: number;
   modulo: string;
-  acao: string;
+  role: string;
 };
 
 export type UserResponse = {
@@ -55,9 +71,13 @@ export type Solicitacao = {
   id_sistema: number;
   id_dev: number;
   usuario: string;
+  email: string;
+  celular: string;
+  ramal: string;
   dataCriacao: Date;
   tipo: string;
   titulo: string;
+  criticidade: string;
   reproduzivel: boolean;
   descricao: string;
   sugestao: string;
@@ -74,4 +94,11 @@ export type Solicitacao = {
   testado_em: Date;
   deferido: boolean;
   sistema: Sistema;
+};
+export type Email = {
+  from: string;
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
 };

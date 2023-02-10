@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: 123456
+    ports:
+      - 5433:5433  
+    expose:
+    - 5433
+    command: -p 5433
+
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8080

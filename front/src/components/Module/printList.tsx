@@ -1,17 +1,35 @@
-import { FaPlus } from "react-icons/fa";
+import { FaPlus, FaTrash, FaTrashAlt } from "react-icons/fa";
 import { useRef, useState } from "react";
 import Modal from "react-modal";
+import { SetItemProp } from "../../utils/functions";
+import useModule from "./context";
+type PrintListProps = {
+  field: string;
+  urlArquivos: string;
+};
 
-const PrintList = () => {
+type Arquivo = {
+  id: number;
+  id_solicitacao: number;
+  nome_arquivo: string;
+  deleted: boolean;
+};
+const PrintList = (props: PrintListProps) => {
   const [prints, setPrints] = useState<string[]>([]);
   const ref = useRef<HTMLInputElement>(null);
+  const { field, urlArquivos } = props;
+  const { item, setItem, setFilesList, fileList, mode } = useModule();
   const AddPrint = () => {
     const open = () => {
       ref.current?.click();
     };
     const selectPrint = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-        setPrints([...prints, URL.createObjectURL(e.target.files[0])]);
+      if (e.currentTarget.files && e.currentTarget.files[0]) {
+        prints.push(URL.createObjectURL(e.currentTarget.files[0]));
+        var list = fileList;
+        list.push(e.currentTarget.files[0]);
+        setFilesList(list);
+        setPrints([...prints]);
       }
     };
     return (
@@ -30,13 +48,25 @@ const PrintList = () => {
       </div>
     );
   };
-  const Print = (props: { src: string }) => {
+  const Print = (props: { src: string; gravado?: boolean; index: number }) => {
     const [showModal, setShowModal] = useState(false);
     const closeModal = () => {
       setShowModal(false);
     };
     const openModal = () => {
       setShowModal(true);
+    };
+    const handleRemove = () => {
+      if (props.gravado) {
+        item[field][props.index].deleted = true;
+        //item[field].splice(props.index, 1);
+        setItem({ ...item });
+      } else {
+        console.log(prints);
+        prints.splice(props.index, 1);
+        console.log(prints);
+        setPrints([...prints]);
+      }
     };
     return (
       <>
@@ -52,32 +82,33 @@ const PrintList = () => {
         )}
         <div
           className="d-flex justify-content-center align-items-center p-5 m-1 rounded"
-          style={{
-            height: "7.5rem",
-            width: "12rem",
-            cursor: "pointer",
-            backgroundColor: "#DDD",
-          }}
+          style={{ height: "7.5rem", width: "12rem", cursor: "pointer", backgroundColor: "#DDD" }}
           onClick={openModal}
         >
-          <img
-            alt="Print"
-            src={props.src}
-            style={{
-              maxHeight: "7.5rem",
-              maxWidth: "12rem",
-            }}
-          />
+          <img alt="Print" src={props.src} style={{ maxHeight: "7.5rem", maxWidth: "12rem" }} />
         </div>
+        {(mode === "Edit" || mode === "Insert") && (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleRemove}
+            style={{ height: 32, width: 32, padding: 0, borderRadius: 32, marginLeft: -17, marginTop: -5 }}
+          >
+            <FaTrashAlt style={{ marginTop: -3 }} />
+          </button>
+        )}
       </>
     );
   };
   return (
     <div className="d-flex flex-wrap col-12 px-1">
-      {prints.map((p) => {
-        return <Print src={p} />;
+      {(item[field] as Arquivo[])?.map((p, i) => {
+        return !p.deleted && <Print src={urlArquivos + p.id} key={i} gravado index={i} />;
       })}
-      <AddPrint />
+      {prints?.map((p, i) => {
+        return <Print src={p} key={i} index={i} />;
+      })}
+      {(mode === "Edit" || mode === "Insert") && <AddPrint />}
     </div>
   );
 };

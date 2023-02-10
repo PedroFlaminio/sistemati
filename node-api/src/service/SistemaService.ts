@@ -4,11 +4,7 @@ import { Sistema } from "../types";
 const SistemaService = {
   listaSistemas: async () => {
     try {
-      let results = await prismaClient.sistema.findMany({
-        where: { ativo: true },
-        orderBy: { nome: "asc" },
-        include: { responsavel: true, reserva: true },
-      });
+      let results = await prismaClient.sistema.findMany({ orderBy: { nome: "asc" }, include: { responsavel: true, reserva: true } });
       return results;
     } catch (e) {
       console.log(e);
@@ -17,8 +13,10 @@ const SistemaService = {
   },
   insereSistema: async (sistema: Sistema) => {
     try {
-      const { id, reserva, responsavel, solicitacoes, ...otheProps } = sistema;
-      await prismaClient.sistema.create({ data: { ...otheProps } });
+      const { id, reserva, responsavel, solicitacoes, id_reserva, id_responsavel, ...otheProps } = sistema;
+      await prismaClient.sistema.create({
+        data: { ...otheProps, reserva: { connect: { id: reserva?.id } }, responsavel: { connect: { id: responsavel?.id } } },
+      });
       return true;
     } catch (e) {
       console.log(e);
@@ -27,8 +25,11 @@ const SistemaService = {
   },
   atualizaSistema: async (sistema: Sistema) => {
     try {
-      const { id, solicitacoes, reserva, responsavel, ...otheProps } = sistema;
-      await prismaClient.sistema.update({ where: { id }, data: { ...otheProps } });
+      const { id, reserva, responsavel, solicitacoes, id_reserva, id_responsavel, ...otheProps } = sistema;
+      await prismaClient.sistema.update({
+        where: { id },
+        data: { ...otheProps, reserva: { connect: { id: reserva?.id } }, responsavel: { connect: { id: responsavel?.id } } },
+      });
       return true;
     } catch (e) {
       console.log(e);

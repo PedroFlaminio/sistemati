@@ -9,24 +9,27 @@ import Table, { SearchRule, TableColumn } from "../components/Module/table";
 import FilterInput from "../components/Module/filterInput";
 import useApi from "../context/ApiContext";
 import yup from "../utils/schemas";
-import useApp, { Item } from "../context/AppContext";
+import useApp from "../context/AppContext";
 import Button from "../components/Module/button";
 import Select from "../components/Module/select";
 import Checkbox from "../components/Module/checkbox";
 import TextArea from "../components/Module/textArea";
 import DateInput from "../components/Module/dateInput";
-import { dateTimeToDateStrUs, dateToStr, jsDateToDate } from "../utils/functions";
+import { dateStrToLocale, dateTimeToDateStrUs, jsDateToDate } from "../utils/functions";
 import PrintList from "../components/Module/printList";
 import { Tab, TabView } from "../components/TabView";
+import { useParams } from "react-router-dom";
+import { ApiStageURL, ApiURL } from "../configs";
 
 const SolicitacoesSchema = yup.object().shape({
-  nome: yup.string().required().label("Nome"),
-  //endereco: yup.string().required().label("Endereço"),
+  id_sistema: yup.number().required().moreThan(0, "Sistema: Campo obrigatório.").label("Sistema"),
+  resumo: yup.string().required().label("Resumo do problema"),
+  descricao: yup.string().required().label("Problema e como reproduzir"),
 });
 
-const Solicitacoes = () => {
+const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) => {
+  const { id } = useParams();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
-  //const [sistemas, setSistemas] = useState<Sistema[]>([]);
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
 
   const [devOptions, setDevOptions] = useState<string[]>([]);
@@ -35,75 +38,107 @@ const Solicitacoes = () => {
   const [sisOptions, setSisOptions] = useState<string[]>([]);
   const [sisValues, setSisValues] = useState<number[]>([]);
 
-  const { getSolicitacoes, postSolicitacao, putSolicitacao, deleteSolicitacao, getDevs, getSistemas, loaded } = useApi();
+  const {
+    getSolicitacaoById,
+    getSolicitacoes,
+    getSolicitacoesByUser,
+    getSolicitacoesResolvidas,
+    postSolicitacao,
+    putSolicitacao,
+    deleteSolicitacao,
+    getDevs,
+    getSistemas,
+    loaded,
+  } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
-    if (loaded) updateList();
-    getDevs((list) => {
-      const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
-      const labels = ["Não Definido"];
-      const values = [0];
-      for (let index = 0; index < sortedList.length; index++) {
-        const nomeDev = sortedList[index].nome;
-        const idDev = sortedList[index].id;
-        if (sortedList[index].id > 0) {
-          labels.push(nomeDev);
-          values.push(idDev);
+    if (loaded) {
+      updateList();
+
+      getDevs((list) => {
+        const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
+        const labels = ["Não Definido"];
+        const values = [0];
+        for (let index = 0; index < sortedList.length; index++) {
+          const nomeDev = sortedList[index].nome;
+          const idDev = sortedList[index].id;
+          if (sortedList[index].id > 0) {
+            labels.push(nomeDev);
+            values.push(idDev);
+          }
         }
-      }
-      setDevOptions(labels);
-      setDevValues(values);
-    });
-    getSistemas((list) => {
-      const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
-      const labels = ["Não Definido"];
-      const values = [0];
-      for (let index = 0; index < sortedList.length; index++) {
-        const nomeSis = sortedList[index].nome;
-        const idSis = sortedList[index].id;
-        if (sortedList[index].id > 0) {
-          labels.push(nomeSis);
-          values.push(idSis);
+        setDevOptions(labels);
+        setDevValues(values);
+      });
+      getSistemas((list) => {
+        const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
+        const labels = ["Não Definido"];
+        const values = [0];
+        for (let index = 0; index < sortedList.length; index++) {
+          const nomeSis = sortedList[index].nome;
+          const idSis = sortedList[index].id;
+          if (sortedList[index].id > 0) {
+            labels.push(nomeSis);
+            values.push(idSis);
+          }
         }
-      }
-      setSisOptions(labels);
-      setSisValues(values);
-    });
+        setSisOptions(labels);
+        setSisValues(values);
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded]);
+  }, [loaded, props.tipo]);
 
   const updateList = () => {
-    getSolicitacoes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
+    if (id !== undefined) return;
+    else if (props.tipo === "Minhas") getSolicitacoesByUser((list: Solicitacao[]) => setSolicitacoes(list));
+    else if (props.tipo === "Pendentes") getSolicitacoes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
+    else if (props.tipo === "Resolvidas") getSolicitacoesResolvidas((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
   };
   const columns: TableColumn[] = [
     { label: "Id", field: "id" },
-    { label: "Nome", field: "nome" },
-    { label: "Aberto Em", field: "dataCriacao" },
-    { label: "Banco", field: "banco" },
-    { label: "IP", field: "ip" },
-    { label: "Servidor", field: "servidor" },
-    { label: "Responsável", field: "responsavel.nome" },
-    { label: "Reserva", field: "reserva.nome" },
-    { label: "Ativo", field: "ativo", formatter: (ativo) => (ativo ? "Sim" : "Não") },
+    { label: "Resumo", field: "resumo" },
+    { label: "Tipo", field: "tipo" },
+    { label: "Criticidade", field: "criticidade" },
+    { label: "Usuário", field: "username" },
+    { label: "Aberto Em", field: "dataCriacao", formatter: dateStrToLocale },
+    { label: "Atualizado Em", field: "updatedAt", formatter: dateStrToLocale },
+    //{ label: "Ativo", field: "ativo", formatter: (ativo) => (ativo ? "Sim" : "Não") },
   ];
   const Buttons = () => {
     const { setMode, setItem, mode, item } = useModule();
     const handleNew = () => {
-      setItem({} as Sistema);
-      setItem({ id: "Novo", dataCriacao: jsDateToDate(new Date()), usuario: usuario.username, tipo: "Erro no sistema", status: "Nova" });
+      console.log(usuario);
+      setItem({});
+      setItem({
+        id: "Novo",
+        status: "Nova",
+        dataCriacao: jsDateToDate(new Date()),
+        nome: usuario.nome,
+        email: usuario.email,
+        tipo: "Erro no sistema",
+        criticidade: "Média",
+      });
       setMode("Insert");
     };
     const handleEdit = () => {
-      setItem({ ...item });
-      setMode("Edit");
+      getSolicitacaoById(item.id, (solicitacao) => {
+        console.log(solicitacao);
+        setItem({ ...solicitacao });
+        setMode("Edit");
+      });
     };
     const handleDelete = () => {
-      setItem({ ...item });
-      setMode("Delete");
+      getSolicitacaoById(item.id, (solicitacao) => {
+        setItem({ ...solicitacao });
+        setMode("Delete");
+      });
     };
     const handleView = () => {
-      setItem({ ...item });
-      setMode("View");
+      getSolicitacaoById(item.id, (solicitacao) => {
+        setItem({ ...solicitacao });
+        setMode("View");
+      });
     };
     const cantInsert = mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || usuario.role === "ROLE_VISITANTE";
     const cantEdit =
@@ -132,11 +167,10 @@ const Solicitacoes = () => {
     );
   };
   const ModuleTable = () => {
-    const { setList, setItem, setMode, item } = useModule();
+    const { setItem, setMode, item, mode } = useModule();
     useEffect(() => {
-      if (loaded) setList(solicitacoes);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [loaded]);
+      if (id && mode !== "View") setMode("View");
+    }, [mode]);
     const handleSelect = (id: number) => {
       const find = solicitacoes.find((o) => o.id === id);
       if (find) {
@@ -144,8 +178,10 @@ const Solicitacoes = () => {
       }
     };
     const handleDbClick = () => {
-      setItem({ ...item });
-      setMode("View");
+      getSolicitacaoById(item.id, (solicitacao) => {
+        setItem({ ...solicitacao });
+        setMode("View");
+      });
     };
     return (
       <Table
@@ -156,30 +192,61 @@ const Solicitacoes = () => {
         handleDoubleClick={handleDbClick}
         footer={Filtros}
         searchFilter={filterSearch}
-        order="nome"
-        orderAsc={true}
       />
     );
   };
   const ModuleForm = () => {
-    const { setMode, setItem, mode, item } = useModule();
+    const { setMode, setItem, mode, item, files, fileList, setFiles } = useModule();
+
+    useEffect(() => {
+      if (loaded) {
+        if (id && item?.id?.toString() !== id) {
+          getSolicitacaoById(parseInt(id), (sol) => setItem(sol));
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleCancelar = () => {
       setMode("List");
       setItem({});
+      setFiles(new FormData());
     };
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      item.id_responsavel = parseInt(item.id_responsavel);
-      item.id_reserva = parseInt(item.id_reserva);
+      item.id_sistema = parseInt(item.id_sistema);
+      var form_data = files;
+      var key: string;
       if (mode === "Insert") {
         delete item.id;
-        postSolicitacao(item as Solicitacao, () => {
+        for (key in item) {
+          form_data.append(key, item[key]);
+        }
+        for (let index = 0; index < fileList.length; index++) {
+          const element = fileList[index];
+          form_data.append(`arquivos[${index}]`, element);
+        }
+        postSolicitacao(form_data, () => {
           setMode("List");
           updateList();
         });
       } else if (mode === "Edit") {
-        putSolicitacao(item as Solicitacao, () => {
+        const excluir = ["resolucao", "resolvido_por", "resolvido_em", "testado_por", "testado_em", "deferido", "historicos", "arquivos"];
+        const arquivosDeleted = [];
+        for (let index = 0; index < item.arquivos.length; index++) {
+          const arq = item.arquivos[index];
+          if (arq.deleted) arquivosDeleted.push(arq.id);
+        }
+        if (arquivosDeleted.length > 0) form_data.append(`arquivosDeleted`, JSON.stringify(arquivosDeleted));
+        for (key in item) {
+          if (excluir.indexOf(key) < 0) form_data.append(key, item[key]);
+        }
+        for (let index = 0; index < fileList.length; index++) {
+          const element = fileList[index];
+          form_data.append(`arquivos[${index}]`, element);
+        }
+        // for (const value of form_data) console.log(value);
+        putSolicitacao(form_data, () => {
           setMode("List");
           updateList();
         });
@@ -189,26 +256,32 @@ const Solicitacoes = () => {
           updateList();
         });
       }
+      setItem({});
+      setFiles(new FormData());
     };
     const columnsHistoricos = [
       { label: "Id", field: "id" },
-      { label: "Data", field: "createdDate", formatter: dateToStr },
-      { label: "Ação", field: "acao" },
-      { label: "Usuário", field: "createdBy" },
+      { label: "Data", field: "data", formatter: dateStrToLocale },
+      { label: "Descrição", field: "descricao" },
+      { label: "Usuário", field: "nome" },
     ];
-    const HistoricosTable = () => <Table id="chamados_historicos" columns={columnsHistoricos} data={item.historicoList} />;
+    const HistoricosTable = () => <Table id="chamados_historicos" columns={columnsHistoricos} data={item.historicos} />;
     const tiposDeErro = ["Dados incorretos", "Documentação", "Erro no sistema", "Sugestão", "Sistema Inacessível"];
-    const criticidades = ["Médio", "Grave", "Urgente"];
+    const status = ["Nova", "Em Análise", "Em Manutenção", "Em Desenvolvimento", "Resolvido"];
+    const criticidades = ["Média", "Grave", "Urgente"];
     return (
       <Form className="p-4" onSubmit={handleSubmit} schema={SolicitacoesSchema}>
         <div className="input-group">
           <Input field="id" label="Id" readOnly />
-          <Input field="usuario" label="Usuário" size={2} readOnly />
-          <DateInput field="dataCriacao" label="Criado em" size={1} formatter={dateTimeToDateStrUs} readOnly />
-          <Input field="status" label="Status" size={2} readOnly />
+          <DateInput field="dataCriacao" label="Criado em" size={3} formatter={dateTimeToDateStrUs} readOnly />
+          <Input field="status" label="Status" size={3} readOnly />
         </div>
         <div className="input-group">
-          <Select options={sisOptions} values={sisValues} field="id_sistema" label="Sistema" size={2} />
+          <Input field="nome" label="Usuário" size={4} readOnly />
+          <Input field="email" label="E-mail" size={4} readOnly />
+        </div>
+        <div className="input-group">
+          <Select options={sisOptions} values={sisValues} field="id_sistema" label="Sistema" size={4} />
           <Select options={tiposDeErro} values={tiposDeErro} field="tipo" label="Tipo" size={2} />
           <Select options={criticidades} values={criticidades} field="criticidade" label="Criticidade" size={2} />
         </div>
@@ -217,20 +290,28 @@ const Solicitacoes = () => {
           <Checkbox field="reproduzivel" label="Reproduzível" />
         </div>
         <div className="input-group">
-          <TextArea label="Problema e como reproduzir" divClassName="px-2 col-12 col-xl-10" />
+          <TextArea label="Problema e como reproduzir" field="descricao" divClassName="px-2 col-12 col-xl-10" />
         </div>
         <div className="input-group mb-3">
-          <TextArea label="Resolução sugerida(opcional)" divClassName="px-2 col-12 col-xl-10" />
+          <TextArea label="Resolução sugerida(opcional)" field="sugestao" divClassName="px-2 col-12 col-xl-10" />
         </div>
         <TabView tabClassName="tab-max" initial="Materiais">
-          <Tab title="Captura de Tela">
-            <PrintList />
+          <Tab title="Capturas de Tela">
+            <PrintList field="arquivos" urlArquivos={ApiStageURL + "arquivos/"} />
+          </Tab>
+          <Tab title="Desenvolvimento">
+            <div className="input-group">
+              <DateInput field="dataCriacao" label="Criado em" size={2} formatter={dateTimeToDateStrUs} readOnly />
+              <Select options={devOptions} values={devValues} field="id_dev" label="Dev" size={2} />
+              <Select options={status} values={status} field="status" label="Status" size={2} />
+              <Select options={criticidades} values={criticidades} field="criticidade" label="Criticidade" size={2} />
+              <div className="input-group mb-3">
+                <TextArea field="sugestao" label="Resolução" divClassName="px-2 col-12 col-xl-10" />
+              </div>
+            </div>
           </Tab>
           <Tab title="Histórico">
             <HistoricosTable />
-          </Tab>
-          <Tab title="Desenvolvimento">
-            <></>
           </Tab>
         </TabView>
         <div className="d-flex justify-content-end pe-3">

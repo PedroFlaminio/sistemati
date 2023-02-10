@@ -16,6 +16,7 @@ const Header = () => {
     signOff();
     navigate("/login");
   };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary header no-print">
       <img src={logo} width="40" alt="logo" className="m-1" />
@@ -53,9 +54,10 @@ const Header = () => {
               );
           })}
         </ul>
+
         <ul className="navbar-nav">
           <li className="nav-item pe-5 me-5">
-            <DropDownButton label={usuario.name} className="btn btn-link nav-link">
+            <DropDownButton label={usuario.nome} className="btn btn-link nav-link">
               <DropDownItem label="Sair" onClick={handleSair} />
             </DropDownButton>
           </li>

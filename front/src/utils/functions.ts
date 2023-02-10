@@ -180,6 +180,24 @@ export const dateTimeToDateStr = (stringDateTime: string) => {
   return `${result[0]}/${result[1]}/${result[2]}`;
 };
 //2022-09-04T00:00:00.000Z
+//04/09/2022 00:00
+export const dateTimeToDateTimeStr = (stringDateTime: string) => {
+  if (stringDateTime === undefined || stringDateTime === null || stringDateTime === "") return "";
+  let result: string[] = [];
+  let stringsDate = stringDateTime.split("T")[0].split("-");
+  result.push(stringsDate[2]);
+  result.push(stringsDate[1]);
+  result.push(stringsDate[0]);
+  let stringsTime = stringDateTime.split("T")[1].substring(0, 5);
+  return `${result[0]}/${result[1]}/${result[2]} ${stringsTime}`;
+};
+//2022-09-04T00:00:00.000Z
+//04/09/2022 00:00
+export const dateStrToLocale = (dateTime: string) => {
+  const data = new Date(dateTime);
+  return data.toLocaleString();
+};
+//2022-09-04T00:00:00.000Z
 //2022-09-04
 export const dateTimeToDateStrUs = (stringDateTime: string) => {
   if (stringDateTime === undefined || stringDateTime === null || stringDateTime === "") return "";
