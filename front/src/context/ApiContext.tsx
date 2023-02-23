@@ -4,7 +4,7 @@ import useApp, { Modulo } from "./AppContext";
 import { useAlert } from "react-alert";
 import { ModuleItem } from "../components/Module/context";
 import axios from "axios";
-import { ApiURL } from "../configs";
+import { ApiURL, IntegratiURL } from "../configs";
 import { clearData } from "../utils/functions";
 import { useNavigate } from "react-router-dom";
 
@@ -34,6 +34,7 @@ type ApiType = {
   postSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   putSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   deleteSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
+  cancelarSolicitacao: (id: number, callback: () => any) => Promise<void>;
   //USUARIO
   getUsuarios: (callback: (item: User[]) => any) => void;
   getUsuarioById: (id: number, callback: (userProps: { username: string; name: string }) => void) => void;
@@ -87,7 +88,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
       var resBaseURL = error.response.config.baseURL;
       if (resBaseURL === ApiURL && (status === 401 || status === 403)) {
         clearData();
-        navigator("login");
+        window.location.href = IntegratiURL + "logoff";
       }
       return Promise.reject(error);
     }
@@ -418,6 +419,24 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
+  const cancelarSolicitacao = async (id: number, callback: () => any) => {
+    setLoading(true);
+    api
+      .get("solicitacoes/cancelar/" + id.toString())
+      .then((resp) => {
+        setLoading(false);
+        if (resp.status === 200) {
+          alert.success(resp.data.message);
+          callback();
+        }
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
   //USUARIO
   const getUsuarios = (callback: (itens: User[]) => {}) => {
     setLoading(true);
@@ -609,7 +628,6 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
-
   const postEmail = (email: any, callback: (list: Email) => {}) => {
     setLoading(true);
     api
@@ -656,6 +674,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         postSolicitacao,
         putSolicitacao,
         deleteSolicitacao,
+        cancelarSolicitacao,
         //USUARIO
         getUsuarios,
         postUsuario,

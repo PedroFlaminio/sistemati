@@ -3,8 +3,20 @@ import { Request, Response } from "express";
 import { SolicitacaoService } from "../service/SolicitacaoService";
 import { getUser, getUserName } from "../utils";
 import { Fields } from "formidable";
+import axios from "axios";
 
 const SolicitacaoController = {
+  cancelar: async (request: Request, response: Response) => {
+    try {
+      const id = parseInt(request.params.id);
+      const result = await SolicitacaoService.cancelar(id);
+      if (result) return response.status(200).json({ message: "Sucesso ao cancelar solicitação." });
+      else return response.status(400).json({ message: "Erro ao cancelar solicitação." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao cancelar solicitação." });
+    }
+  },
   getById: async (request: Request, response: Response) => {
     try {
       const id = parseInt(request.params.id);
@@ -16,9 +28,9 @@ const SolicitacaoController = {
       return response.status(400).json({ message: "Erro ao listar solicitações." });
     }
   },
-  lista: async (request: Request, response: Response) => {
+  listaSolicitacoesPendentes: async (request: Request, response: Response) => {
     try {
-      const result = await SolicitacaoService.listaSolicitacoes();
+      const result = await SolicitacaoService.listaSolicitacoesPendentes();
       if (result) return response.status(200).json(result);
       else return response.status(400).json({ message: "Erro ao listar solicitações." });
     } catch (err) {
@@ -104,6 +116,29 @@ const SolicitacaoController = {
       const result = await SolicitacaoService.getArquivo(id);
       if (result) return response.status(200).sendFile(result);
       else return response.status(400).json({ message: "Erro ao acessar foto." });
+    } catch (err) {
+      console.log(err);
+      return response.status(400).json({ message: "Erro ao acessar foto." });
+    }
+  },
+  getFoto: async (request: Request, response: Response) => {
+    try {
+      const matricula = parseInt(request.params.matricula);
+      console.log(matricula);
+
+      let foto = ""; //"data:image/jpeg;base64";
+      const x = await axios
+        .get(
+          `https://urbamsjc.com.br/api/foto_colaborador/${matricula}/CFBDCB9C5B7936A8DE6B5EBEC22BC23BC911FB2286CFD320DAD371975CB2EEE0BA79758A3445E70468D16997DBB63D6DF51BFB3D9DD2A699B18285719ACC`
+        )
+        .then((resp) => {
+          //console.log(resp.data.b64);
+          foto += resp.data.b64;
+          //setFoto(resp.data);
+        })
+        .catch((error) => console.log(error));
+      let base64Image = foto.split(";base64,").pop();
+      return response.status(200).json(foto);
     } catch (err) {
       console.log(err);
       return response.status(400).json({ message: "Erro ao acessar foto." });

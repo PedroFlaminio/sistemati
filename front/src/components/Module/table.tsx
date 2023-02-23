@@ -56,8 +56,8 @@ const Table = (props: TableProps) => {
   const { loaded } = useApp();
   const [currentPage, setCurrentPg] = useState(options[id]?.currentPage || 0);
   const [pageSize, setPageSz] = useState(options[id]?.pageSize || 20);
-  const [sortIndex, setSortIndex] = useState(options[id]?.sortIndex || props?.order || "id");
-  const [sortAsc, setSortAsc] = useState(options[id]?.sortAsc || props?.orderAsc || false);
+  const [sortIndex, setSortIndex] = useState(props?.order || "id");
+  const [sortAsc, setSortAsc] = useState(props?.orderAsc || false);
   const [totalElements, setTotalElements] = useState(options[id]?.totalElements || 0);
   const { columns, handleSelect, handleDoubleClick, handleRenderRowColor, dataHandle = "client" } = props;
   const [selectedId, setSelectedId] = useState(-1);

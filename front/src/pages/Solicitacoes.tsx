@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Module from "../components/Module";
-import { Sistema, Solicitacao } from "../utils/types";
+import { Solicitacao } from "../utils/types";
 import List from "../components/Module/list";
 import useModule from "../components/Module/context";
 import Form from "../components/Module/form";
@@ -19,7 +19,7 @@ import { dateStrToLocale, dateTimeToDateStrUs, jsDateToDate } from "../utils/fun
 import PrintList from "../components/Module/printList";
 import { Tab, TabView } from "../components/TabView";
 import { useParams } from "react-router-dom";
-import { ApiStageURL, ApiURL } from "../configs";
+import { ApiURL } from "../configs";
 
 const SolicitacoesSchema = yup.object().shape({
   id_sistema: yup.number().required().moreThan(0, "Sistema: Campo obrigatório.").label("Sistema"),
@@ -46,6 +46,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     postSolicitacao,
     putSolicitacao,
     deleteSolicitacao,
+    cancelarSolicitacao,
     getDevs,
     getSistemas,
     loaded,
@@ -99,11 +100,13 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     { label: "Id", field: "id" },
     { label: "Resumo", field: "resumo" },
     { label: "Tipo", field: "tipo" },
+    { label: "Status", field: "status" },
     { label: "Criticidade", field: "criticidade" },
-    { label: "Usuário", field: "username" },
+    { label: "Sistema", field: "sistema.nome" },
+    { label: "Usuário", field: "nome" },
+    // { label: "Ordem", field: "ordem" },
     { label: "Aberto Em", field: "dataCriacao", formatter: dateStrToLocale },
     { label: "Atualizado Em", field: "updatedAt", formatter: dateStrToLocale },
-    //{ label: "Ativo", field: "ativo", formatter: (ativo) => (ativo ? "Sim" : "Não") },
   ];
   const Buttons = () => {
     const { setMode, setItem, mode, item } = useModule();
@@ -140,6 +143,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         setMode("View");
       });
     };
+    const handleCancelar = () => {
+      cancelarSolicitacao(item.id, () => {
+        setMode("List");
+      });
+    };
     const cantInsert = mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || usuario.role === "ROLE_VISITANTE";
     const cantEdit =
       mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || item.id === undefined || usuario.role === "ROLE_VISITANTE";
@@ -148,7 +156,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       <>
         <Button className="rounded-0" label="Novo" icon="new" disabled={cantInsert} onClick={handleNew} />
         <Button className="rounded-0" label="Editar" icon="edit" disabled={cantEdit} onClick={handleEdit} />
-        <Button className="rounded-0" label="Excluir" icon="delete" disabled={cantEdit} onClick={handleDelete} />
+        <Button className="rounded-0" label="Cancelar" icon="cancelar" disabled={cantEdit} onClick={handleCancelar} />
         <Button className="rounded-top-right" label="Visualizar" icon="view" disabled={cantView} onClick={handleView} />
       </>
     );
@@ -156,7 +164,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
   const Filtros = () => {
     const handleSearchChange = (value: string) => {
       if (value !== "") {
-        const searchFilter: SearchRule = { fields: ["id", "nome", "username"], data: value, op: "CT" };
+        const searchFilter: SearchRule = {
+          fields: ["id", "resumo", "tipo", "criticidade", "username", "dataCriacao", "updatedAt"],
+          data: value,
+          op: "CT",
+        };
         setFilterSearch(searchFilter);
       } else setFilterSearch(undefined);
     };
@@ -186,6 +198,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     return (
       <Table
         id="solicitacoes"
+        order={props.tipo === "Pendentes" ? "ordem" : "updatedAt"}
         data={solicitacoes}
         columns={columns}
         handleSelect={handleSelect}
@@ -266,8 +279,8 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       { label: "Usuário", field: "nome" },
     ];
     const HistoricosTable = () => <Table id="chamados_historicos" columns={columnsHistoricos} data={item.historicos} />;
-    const tiposDeErro = ["Dados incorretos", "Documentação", "Erro no sistema", "Sugestão", "Sistema Inacessível"];
-    const status = ["Nova", "Em Análise", "Em Manutenção", "Em Desenvolvimento", "Resolvido"];
+    const tiposDeErro = ["Erro no sistema", "Melhoria", "Sistema Inacessível"];
+    const status = ["Nova", "Em Análise", "Em Andamento", "Em Espera", "Resolvido"];
     const criticidades = ["Média", "Grave", "Urgente"];
     return (
       <Form className="p-4" onSubmit={handleSubmit} schema={SolicitacoesSchema}>
@@ -287,7 +300,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         </div>
         <div className="input-group">
           <Input field="resumo" label="Resumo do problema" size={6} />
-          <Checkbox field="reproduzivel" label="Reproduzível" />
+          <Checkbox
+            field="reproduzivel"
+            label="Reproduzível"
+            tooltip="Marque se o problema é facilmente reproduzido, se possível descreva como chegou a esse erro"
+          />
         </div>
         <div className="input-group">
           <TextArea label="Problema e como reproduzir" field="descricao" divClassName="px-2 col-12 col-xl-10" />
@@ -297,7 +314,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         </div>
         <TabView tabClassName="tab-max" initial="Materiais">
           <Tab title="Capturas de Tela">
-            <PrintList field="arquivos" urlArquivos={ApiStageURL + "arquivos/"} />
+            <PrintList field="arquivos" urlArquivos={ApiURL + "arquivos/"} />
           </Tab>
           <Tab title="Desenvolvimento">
             <div className="input-group">
@@ -305,6 +322,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
               <Select options={devOptions} values={devValues} field="id_dev" label="Dev" size={2} />
               <Select options={status} values={status} field="status" label="Status" size={2} />
               <Select options={criticidades} values={criticidades} field="criticidade" label="Criticidade" size={2} />
+              <Checkbox
+                field="solicitado_diretor"
+                label="Solicitado por um diretor"
+                tooltip="Marque se o problema é facilmente reproduzido, se possível descreva como chegou a esse erro"
+              />
               <div className="input-group mb-3">
                 <TextArea field="sugestao" label="Resolução" divClassName="px-2 col-12 col-xl-10" />
               </div>

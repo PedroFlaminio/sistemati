@@ -5,6 +5,19 @@ import fs from "fs";
 import path from "path";
 
 export const SolicitacaoService = {
+  cancelar: async (id: number) => {
+    try {
+      let results = await prismaClient.solicitacao.update({
+        where: { id },
+        data: { status: "Cancelado" },
+      });
+
+      return results;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
   getById: async (id: number) => {
     try {
       let results = await prismaClient.solicitacao.findUnique({
@@ -18,14 +31,30 @@ export const SolicitacaoService = {
       return false;
     }
   },
-  listaSolicitacoes: async () => {
+  listaSolicitacoesPendentes: async () => {
     try {
       let results = await prismaClient.solicitacao.findMany({
-        where: { NOT: { status: "Resolvido" } },
+        where: { NOT: { OR: [{ status: "Resolvido" }, { status: "Cancelado" }] } },
         include: { sistema: true, dev: true },
+        orderBy: { dataCriacao: "asc" },
       });
-
-      return results;
+      const ordenados = [];
+      for (let index = 0; index < results.length; index++) {
+        const element = results[index];
+        let ordem = 0;
+        if (element.criticidade === "Média") ordem += 1;
+        else if (element.criticidade === "Grave") ordem += 3;
+        else if (element.criticidade === "Urgente") ordem += 5;
+        if (element.solicitado_diretor) ordem += 1;
+        console.log(element.id);
+        console.log(element.criticidade);
+        console.log(element.solicitado_diretor);
+        console.log(ordem);
+        ordenados.push({ ...element, ordem });
+      }
+      ordenados.sort((a, b) => a.ordem);
+      //console.log(ordenados);
+      return ordenados;
     } catch (e) {
       console.log(e);
       return false;

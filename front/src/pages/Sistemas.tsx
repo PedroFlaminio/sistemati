@@ -11,13 +11,17 @@ import useApi from "../context/ApiContext";
 import yup from "../utils/schemas";
 import useApp, { Item } from "../context/AppContext";
 import Button from "../components/Module/button";
-import SearchInputList from "../components/Module/searchInputList";
 import Select from "../components/Module/select";
 import TextArea from "../components/Module/textArea";
+import Checkbox from "../components/Module/checkbox";
 
 const SistemasSchema = yup.object().shape({
-  // nome: yup.string().required().label("Nome"),
-  //endereco: yup.string().required().label("Endereço"),
+  nome: yup.string().required().label("Nome"),
+  tecnologia: yup.string().required().label("Técnologia"),
+  banco: yup.string().required().label("Banco"),
+  ip: yup.string().required().label("IP"),
+  servidor: yup.string().required().label("Servidor"),
+  id_responsavel: yup.number().moreThan(0, "Responsável: Campo obrigatório.").required().label("Responsável"),
 });
 
 const Sistemas = () => {
@@ -52,11 +56,10 @@ const Sistemas = () => {
   const updateList = () => {
     getSistemas((list: Sistema[]) => setSistemas(list.filter((d) => d.id > 0)));
   };
-
   const columns: TableColumn[] = [
     { label: "Id", field: "id" },
     { label: "Nome", field: "nome" },
-    { label: "Tecnologia", field: "tecnologia" },
+    { label: "Técnologia", field: "tecnologia" },
     { label: "Banco", field: "banco" },
     { label: "IP", field: "ip" },
     { label: "Servidor", field: "servidor" },
@@ -99,7 +102,11 @@ const Sistemas = () => {
   const Filtros = () => {
     const handleSearchChange = (value: string) => {
       if (value !== "") {
-        const searchFilter: SearchRule = { fields: ["id", "nome", "username"], data: value, op: "CT" };
+        const searchFilter: SearchRule = {
+          fields: ["id", "nome", "tecnologia", "banco", "ip", "servidor", "responsavel.nome", "reserva.nome"],
+          data: value,
+          op: "CT",
+        };
         setFilterSearch(searchFilter);
       } else setFilterSearch(undefined);
     };
@@ -172,7 +179,7 @@ const Sistemas = () => {
         <div className="input-group">
           <Input field="id" label="Id" readOnly />
           <Input field="nome" label="Nome" size={4} />
-          <Input field="tecnologia" label="Tecnologia" size={2} />
+          <Input field="tecnologia" label="Técnologia" size={2} />
           <Input field="banco" label="Banco" size={2} />
           <Input field="ip" label="IP" size={2} />
         </div>
@@ -181,6 +188,7 @@ const Sistemas = () => {
 
           <Select options={devOptions} values={devValues} field="id_responsavel" label="Responsável" size={3} />
           <Select options={devOptions} values={devValues} field="id_reserva" label="Reserva" size={3} />
+          <Checkbox field="ativo" label="Ativo" size={1} />
         </div>
         <TextArea label="Descrição" field="descricao" size={12} />
         <TextArea label="Observações" field="observacoes" size={12} />

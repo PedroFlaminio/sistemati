@@ -6,15 +6,17 @@ import DropDownItem from "./Module/dropdownItem";
 import logo from "../assets/NovoLogo.png";
 import logoSistemati from "../assets/sistemati-logo.png";
 import useModule from "./Module/context";
+import { useState } from "react";
 
 const Header = () => {
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signOff, usuario } = useApp();
   const { setMode } = useModule();
   const handleSair = () => {
     signOff();
-    window.location.href = IntegratiURL;
+    window.location.href = IntegratiURL + "logoff";
   };
 
   return (
@@ -54,10 +56,10 @@ const Header = () => {
               );
           })}
         </ul>
-
         <ul className="navbar-nav">
           <li className="nav-item pe-5 me-5">
             <DropDownButton label={usuario.nome} className="btn btn-link nav-link">
+              <DropDownItem label="Mudar de módulo" onClick={() => setShowModal(true)} />
               <DropDownItem label="Sair" onClick={handleSair} />
             </DropDownButton>
           </li>

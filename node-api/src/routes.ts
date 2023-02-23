@@ -17,15 +17,19 @@ router.get("/devsAtivos", ensureAuthenticated, DevController.listaAtivos);
 router.get("/sistemas", ensureAuthenticated, SistemaController.lista);
 router.post("/sistemas", ensureAuthenticated, SistemaController.insere);
 router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
+router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
+router.put("/sistemasAtivos", ensureAuthenticated, SistemaController.listaAtivos);
 //SOLICITAÇÕES
 router.get("/solicitacoes/:id", ensureAuthenticated, SolicitacaoController.getById);
-router.get("/solicitacoes", ensureAuthenticated, SolicitacaoController.lista);
+router.get("/solicitacoes", ensureAuthenticated, SolicitacaoController.listaSolicitacoesPendentes);
 router.get("/solicitacoesByUser", ensureAuthenticated, SolicitacaoController.listaSolicitacoesByUser);
 router.get("/solicitacoesResolvidas", ensureAuthenticated, SolicitacaoController.listaSolicitacoesResolvidas);
+router.get("/solicitacoes/cancelar/:id", ensureAuthenticated, SolicitacaoController.cancelar);
 router.post("/solicitacoes", ensureAuthenticated, formidableMiddleware(), SolicitacaoController.insere);
 router.put("/solicitacoes", ensureAuthenticated, formidableMiddleware(), SolicitacaoController.atualiza);
 router.delete("/solicitacoes", ensureAuthenticated, SolicitacaoController.deleta);
 router.get("/arquivos/:id", SolicitacaoController.getArquivo);
+router.get("/foto/:matricula", SolicitacaoController.getFoto);
 //ENVIAR EMAIL
 router.post("/email", EmailController.enviaEmail);
 router.get("/clock", (req, res) => {

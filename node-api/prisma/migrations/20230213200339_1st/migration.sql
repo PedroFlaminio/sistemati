@@ -33,7 +33,7 @@ CREATE TABLE "solicitacao" (
 );
 
 -- CreateTable
-CREATE TABLE "agendamento_historicos" (
+CREATE TABLE "solicitacao_historicos" (
     "id" SERIAL NOT NULL,
     "id_solicitacao" INTEGER NOT NULL,
     "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -42,16 +42,16 @@ CREATE TABLE "agendamento_historicos" (
     "nome" TEXT NOT NULL DEFAULT '',
     "descricao" TEXT NOT NULL,
 
-    CONSTRAINT "agendamento_historicos_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "solicitacao_historicos_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "agendamento_arquivos" (
+CREATE TABLE "solicitacao_arquivos" (
     "id" SERIAL NOT NULL,
     "id_solicitacao" INTEGER NOT NULL,
     "nome_arquivo" TEXT NOT NULL,
 
-    CONSTRAINT "agendamento_arquivos_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "solicitacao_arquivos_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -91,10 +91,10 @@ ALTER TABLE "solicitacao" ADD CONSTRAINT "solicitacao_id_sistema_fkey" FOREIGN K
 ALTER TABLE "solicitacao" ADD CONSTRAINT "solicitacao_id_dev_fkey" FOREIGN KEY ("id_dev") REFERENCES "dev"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "agendamento_historicos" ADD CONSTRAINT "agendamento_historicos_id_solicitacao_fkey" FOREIGN KEY ("id_solicitacao") REFERENCES "solicitacao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "solicitacao_historicos" ADD CONSTRAINT "solicitacao_historicos_id_solicitacao_fkey" FOREIGN KEY ("id_solicitacao") REFERENCES "solicitacao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "agendamento_arquivos" ADD CONSTRAINT "agendamento_arquivos_id_solicitacao_fkey" FOREIGN KEY ("id_solicitacao") REFERENCES "solicitacao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "solicitacao_arquivos" ADD CONSTRAINT "solicitacao_arquivos_id_solicitacao_fkey" FOREIGN KEY ("id_solicitacao") REFERENCES "solicitacao"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "sistema" ADD CONSTRAINT "sistema_id_responsavel_fkey" FOREIGN KEY ("id_responsavel") REFERENCES "dev"("id") ON DELETE SET NULL ON UPDATE CASCADE;

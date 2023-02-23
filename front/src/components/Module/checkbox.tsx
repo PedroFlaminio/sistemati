@@ -1,10 +1,12 @@
 import { InputHTMLAttributes, useEffect, useState } from "react";
 import cx from "classnames";
 import useForm from "./context";
+import { FaQuestion } from "react-icons/fa";
 
 type InputProps = {
   field: string;
   label: string;
+  tooltip?: string;
   required?: boolean;
   readOnly?: boolean;
   size?: number;
@@ -27,8 +29,9 @@ const Checkbox = (props: InputProps) => {
   useEffect(() => {
     setInputValue(item[field]);
   }, []);
+  const tooltip = props.tooltip ? { "data-toggle": "tooltip", "data-placement": "top", title: props.tooltip } : {};
   return (
-    <div className={col + " mt-4 ms-1 form-check"}>
+    <div className={col + " mt-4 ms-1 form-check"} {...tooltip}>
       <label className="mb-0 form-check-label">
         <strong>{label}</strong>
       </label>

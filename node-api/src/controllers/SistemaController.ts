@@ -11,6 +11,15 @@ const SistemaController = {
       return response.status(400).json({ message: "Erro ao listar sistemas." });
     }
   },
+  listaAtivos: async (request: Request, response: Response) => {
+    try {
+      const result = await SistemaService.listaAtivos();
+      if (result) return response.status(200).json(result);
+      else return response.status(400).json({ message: "Erro ao listar sistemas." });
+    } catch (err) {
+      return response.status(400).json({ message: "Erro ao listar sistemas." });
+    }
+  },
 
   insere: async (request: Request, response: Response) => {
     try {
