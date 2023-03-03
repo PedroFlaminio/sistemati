@@ -1,6 +1,7 @@
 import jwtDecode from "jwt-decode";
 import { JwtPayload } from "jsonwebtoken";
 import { ModuleItem } from "../components/Module/context";
+import { Menu, User } from "./types";
 
 export const randomizeEmail = (original: String) => {
   let arrobaIndex = original.indexOf("@");
@@ -16,6 +17,15 @@ export const isJwtExpired = (token: string) => {
   const currentTime = new Date().getTime() / 1000;
   if (decoded.exp && currentTime > decoded.exp) isJwtExpired = true;
   return isJwtExpired;
+};
+
+export const hasAcess = (usuario: User, menu: Menu) => {
+  if (usuario.isDev) return true;
+  if (menu.dev) return false;
+  if (usuario.isAdm) return true;
+  if (menu.adm) return false;
+  if (!menu.roles) return true;
+  if (menu.roles.indexOf(usuario.role) > -1) return true;
 };
 
 export const GetItemProp = (item: { [key: string]: any } | undefined, fieldName: string) => {

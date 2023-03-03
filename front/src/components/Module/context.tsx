@@ -17,6 +17,7 @@ type FormType = {
   update: boolean;
   files: FormData;
   fileList: File[];
+  printList: File[];
   setItem: (item: ModuleItem, callback?: () => void) => void;
   setMode: (mode: string) => void;
   setList: (list: ModuleItem[]) => void;
@@ -36,6 +37,7 @@ type FormType = {
   setOrderAsc: (orderAsc: boolean) => void;
   setFiles: (files: FormData) => void;
   setFilesList: (files: File[]) => void;
+  setPrintList: (files: File[]) => void;
 
   options: { [prop: string]: SearchOptions };
   setOptions: (index: string, opt: SearchOptions) => void;
@@ -56,7 +58,6 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   const [searchList, setSearchList] = useState<ModuleItem[]>([]);
   const [item, setIt] = useState<ModuleItem>({});
   const [files, setFls] = useState<FormData>(new FormData());
-  const [fileList, setFlsList] = useState<File[]>([]);
   const [list, setListModule] = useState<ModuleItem[]>([]);
   const [index, setIndex] = useState(-1);
   const [moduleErrors, setErrors] = useState<ModuleError[]>([]);
@@ -65,6 +66,9 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
   const [order, setOrd] = useState(props.order || "id");
   const [orderAsc, setOrdAsc] = useState(props.orderAsc || false);
   const [update, setUpdate] = useState(true);
+
+  const [printList, setPrtList] = useState<File[]>([]);
+  const [fileList, setFlsList] = useState<File[]>([]);
   const storedProps = { currentPage, pageSize, order, orderAsc, list, item };
   useEffect(() => {
     let JSONObject = localStorage.getItem(id);
@@ -88,6 +92,10 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
 
   const setFiles = (files: FormData) => {
     setFls(files);
+  };
+
+  const setPrintList = (files: File[]) => {
+    setPrtList(files);
   };
 
   const setFilesList = (files: File[]) => {
@@ -161,6 +169,8 @@ export const ModuleContextProvider = (props: ModuleContextProviderProps) => {
         setFiles,
         fileList,
         setFilesList,
+        printList,
+        setPrintList,
       }}
     >
       {children}

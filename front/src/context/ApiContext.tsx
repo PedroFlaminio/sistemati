@@ -23,6 +23,7 @@ type ApiType = {
   deleteDev: (dev: Dev, callback: () => any) => Promise<void>;
   //SISTEMAS
   getSistemas: (callback: (list: Sistema[]) => any) => Promise<void>;
+  getSistemasAtivos: (callback: (list: Sistema[]) => any) => Promise<void>;
   postSistema: (dev: Sistema, callback: () => any) => Promise<void>;
   putSistema: (dev: Sistema, callback: () => any) => Promise<void>;
   deleteSistema: (dev: Sistema, callback: () => any) => Promise<void>;
@@ -61,7 +62,6 @@ type ApiContextProviderProps = {
 export const ApiContextProvider = (props: ApiContextProviderProps) => {
   const { setLoading, setUsuario } = useApp();
   const alert = useAlert();
-  const navigator = useNavigate();
   const [accessToken, setAccessToken] = useState("");
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
@@ -168,7 +168,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
   const getDevsAtivos = async (callback: (list: Dev[]) => {}) => {
     setLoading(true);
     api
-      .get("devsinativos")
+      .get("devsAtivos")
       .then((resp) => {
         callback(resp.data);
         if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
@@ -239,6 +239,21 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     setLoading(true);
     api
       .get("sistemas")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const getSistemasAtivos = async (callback: (list: Sistema[]) => {}) => {
+    setLoading(true);
+    api
+      .get("sistemasAtivos")
       .then((resp) => {
         callback(resp.data);
         if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
@@ -663,6 +678,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         deleteDev,
         //SISTEMAS
         getSistemas,
+        getSistemasAtivos,
         postSistema,
         putSistema,
         deleteSistema,

@@ -5,11 +5,21 @@ import fs from "fs";
 import path from "path";
 
 export const SolicitacaoService = {
-  cancelar: async (id: number) => {
+  cancelar: async (id: number, user: User) => {
     try {
+      let { nome, username, email, matricula = 0 } = user;
       let results = await prismaClient.solicitacao.update({
         where: { id },
         data: { status: "Cancelado" },
+      });
+      await prismaClient.historicoSolicitacao.create({
+        data: {
+          descricao: "Cancelamento do solicitação",
+          nome,
+          username,
+          matricula,
+          solicitacao: { connect: { id } },
+        },
       });
 
       return results;
@@ -24,8 +34,8 @@ export const SolicitacaoService = {
         where: { id },
         include: { sistema: true, arquivos: true, historicos: true, dev: true },
       });
-
-      return results;
+      const { arquivos, ...otherProps } = results;
+      return { ...otherProps, arquivos: arquivos.filter((a) => a.tipo === "arquivo"), prints: arquivos.filter((a) => a.tipo === "print") };
     } catch (e) {
       console.log(e);
       return false;
@@ -81,8 +91,9 @@ export const SolicitacaoService = {
   },
   insereSolicitacao: async (solicitacao: Solicitacao, files: any, user: User) => {
     try {
-      const { id, id_sistema, id_dev, dev, sistema, dataCriacao, ...otheProps } = solicitacao;
-      const { nome, username, email, matricula } = user;
+      const { id, id_sistema, id_dev, dev, sistema, dataCriacao, historicos, arquivos, ...otheProps } = solicitacao;
+      let { nome, username, email, matricula = 0 } = user;
+      if (matricula === null) matricula = 0;
       const newSolicitacao = await prismaClient.solicitacao.create({
         data: {
           ...otheProps,
@@ -105,9 +116,11 @@ export const SolicitacaoService = {
       const keys = Object.keys(files);
       if (keys.length > 0) {
         for (let index = 0; index < keys.length; index++) {
+          const tipo = keys[index].split("[")[0];
           const element = files[keys[index]];
           const newArquivo = await prismaClient.arquivoSolicitacao.create({
             data: {
+              tipo,
               nome_arquivo: element.name,
               solicitacao: { connect: { id: newSolicitacao.id } },
             },
@@ -124,14 +137,31 @@ export const SolicitacaoService = {
   },
   atualizaSolicitacao: async (solicitacao: Solicitacao, files: any, user: User) => {
     try {
-      const { id, id_sistema, id_dev, sistema, dev, dataCriacao, nome, username, email, matricula, arquivosDeleted, ...otheProps } =
-        solicitacao;
-
+      let {
+        id,
+        id_sistema,
+        id_dev,
+        sistema,
+        dev,
+        dataCriacao,
+        nome,
+        username,
+        email,
+        matricula,
+        arquivosDeleted,
+        historicos,
+        arquivos,
+        prints,
+        ...otheProps
+      } = solicitacao;
+      if (id_dev === null) id_dev = 0;
+      if (matricula === null) matricula = 0;
       await prismaClient.solicitacao.update({
         where: { id },
         data: {
           ...otheProps,
           sistema: { connect: { id: id_sistema } },
+          dev: { connect: { id: id_dev } },
         },
       });
       await prismaClient.historicoSolicitacao.create({
@@ -139,16 +169,18 @@ export const SolicitacaoService = {
           descricao: "Alteração da solicitação",
           nome: user.nome,
           username: user.username,
-          matricula: user.matricula,
+          matricula: user.matricula || 0,
           solicitacao: { connect: { id } },
         },
       });
       const keys = Object.keys(files);
       if (keys.length > 0) {
         for (let index = 0; index < keys.length; index++) {
+          const tipo = keys[index].split("[")[0];
           const element = files[keys[index]];
           const newArquivo = await prismaClient.arquivoSolicitacao.create({
             data: {
+              tipo,
               nome_arquivo: element.name,
               solicitacao: { connect: { id } },
             },

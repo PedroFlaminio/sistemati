@@ -22,8 +22,9 @@ const DevService = {
   },
   insereDev: async (dev: Dev) => {
     try {
-      const { id, ...otheProps } = dev;
-      await prismaClient.dev.create({ data: { ...otheProps } });
+      const { id, matricula: matriculaStr, ...otheProps } = dev;
+      const matricula = parseInt(matriculaStr.toString());
+      await prismaClient.dev.create({ data: { ...otheProps, matricula } });
       return true;
     } catch (e) {
       console.log(e);

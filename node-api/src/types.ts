@@ -71,7 +71,7 @@ export type Solicitacao = {
   id_sistema: number;
   id_dev: number;
 
-  matricula?: string;
+  matricula?: number;
   username?: string;
   nome?: string;
   email?: string;
@@ -100,6 +100,9 @@ export type Solicitacao = {
   sistema: Sistema;
   dev: Dev;
   arquivosDeleted?: number[];
+  historicos: [];
+  arquivos: [];
+  prints?: [];
 };
 export type Email = {
   from: string;

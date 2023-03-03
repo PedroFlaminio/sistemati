@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import Module from "../components/Module";
 import { Sistema } from "../utils/types";
 import List from "../components/Module/list";
-import useModule, { ModuleItem } from "../components/Module/context";
+import useModule from "../components/Module/context";
 import Form from "../components/Module/form";
 import Input from "../components/Module/input";
-import Table, { SearchRule, TableColumn } from "../components/Module/table";
+import Table, { FilterRule, SearchRule, TableColumn } from "../components/Module/table";
 import FilterInput from "../components/Module/filterInput";
 import useApi from "../context/ApiContext";
 import yup from "../utils/schemas";
@@ -14,10 +14,11 @@ import Button from "../components/Module/button";
 import Select from "../components/Module/select";
 import TextArea from "../components/Module/textArea";
 import Checkbox from "../components/Module/checkbox";
+import FilterSelect from "../components/Module/filterSelect";
 
 const SistemasSchema = yup.object().shape({
   nome: yup.string().required().label("Nome"),
-  tecnologia: yup.string().required().label("Técnologia"),
+  tecnologia: yup.string().required().label("Tecnologia"),
   banco: yup.string().required().label("Banco"),
   ip: yup.string().required().label("IP"),
   servidor: yup.string().required().label("Servidor"),
@@ -27,13 +28,14 @@ const SistemasSchema = yup.object().shape({
 const Sistemas = () => {
   const [sistemas, setSistemas] = useState<Sistema[]>([]);
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
+  const [filterStatus, setFilterStatus] = useState<FilterRule | undefined>({ field: "ativo", data: "true", operation: "CN", type: "S" });
   const [devOptions, setDevOptions] = useState<string[]>([]);
   const [devValues, setDevValues] = useState<number[]>([]);
-  const { getSistemas, postSistema, putSistema, deleteSistema, getDevs, loaded } = useApi();
+  const { getSistemas, postSistema, putSistema, deleteSistema, getDevsAtivos, loaded } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
     if (loaded) updateList();
-    getDevs((list) => {
+    getDevsAtivos((list) => {
       const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
       const newTecnicos: Item[] = [];
       const labels = ["Não Definido"];
@@ -59,7 +61,7 @@ const Sistemas = () => {
   const columns: TableColumn[] = [
     { label: "Id", field: "id" },
     { label: "Nome", field: "nome" },
-    { label: "Técnologia", field: "tecnologia" },
+    { label: "Tecnologia", field: "tecnologia" },
     { label: "Banco", field: "banco" },
     { label: "IP", field: "ip" },
     { label: "Servidor", field: "servidor" },
@@ -110,8 +112,22 @@ const Sistemas = () => {
         setFilterSearch(searchFilter);
       } else setFilterSearch(undefined);
     };
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      if (e.currentTarget.value !== "") {
+        const newFilter: FilterRule = { field: "ativo", data: e.currentTarget.value, operation: "CN", type: "S" };
+        setFilterStatus(newFilter);
+      } else setFilterStatus(undefined);
+    };
     return (
       <div className="row row-cols-auto p-2 bg-light border-light border rounded-bottom mx-0 justify-content-end">
+        <FilterSelect
+          size={2}
+          label="Status"
+          onChange={handleStatusChange}
+          options={["Todos", "Ativos", "Inativos"]}
+          values={["", "true", "false"]}
+          value={filterStatus?.data}
+        />
         <FilterInput placeholder="Pesquisar..." defaultValue={filterSearch?.data} handleBtnClick={handleSearchChange} />
       </div>
     );
@@ -141,6 +157,7 @@ const Sistemas = () => {
         handleDoubleClick={handleDbClick}
         footer={Filtros}
         searchFilter={filterSearch}
+        filters={[filterStatus]}
         order="nome"
         orderAsc={true}
       />
@@ -179,7 +196,7 @@ const Sistemas = () => {
         <div className="input-group">
           <Input field="id" label="Id" readOnly />
           <Input field="nome" label="Nome" size={4} />
-          <Input field="tecnologia" label="Técnologia" size={2} />
+          <Input field="tecnologia" label="Tecnologia" size={2} />
           <Input field="banco" label="Banco" size={2} />
           <Input field="ip" label="IP" size={2} />
         </div>

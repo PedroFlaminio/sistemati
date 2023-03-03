@@ -1,16 +1,13 @@
+import { Menu } from "./utils/types";
+
 export const versao = "Versão: 1.1.0";
-type Menu = {
-  label: string;
-  path?: string;
-  submenu?: [{ label: string; path: string }];
-  roles?: string[];
-};
+
 export const menus: Menu[] = [
   { label: "Minhas Solicitações ", path: "/minhasSolicitacoes" },
-  { label: "Solicitações Pendentes", path: "/solicitacoes" },
-  { label: "Solicitações Resolvidas", path: "/solicitacoesResolvidas" },
-  { label: "Sistemas", path: "/sistemas" },
-  { label: "Devs", path: "/devs" },
+  { label: "Solicitações Pendentes", path: "/solicitacoes", roles: ["APROVADOR"] },
+  { label: "Solicitações Resolvidas", path: "/solicitacoesResolvidas", roles: ["APROVADOR"] },
+  { label: "Sistemas", path: "/sistemas", roles: ["APROVADOR"] },
+  { label: "Devs", path: "/devs", roles: ["APROVADOR"] },
 ];
 
 //DEV

@@ -1,3 +1,11 @@
+export type Menu = {
+  label: string;
+  path?: string;
+  submenu?: [{ label: string; path: string }];
+  roles?: string[];
+  adm?: boolean;
+  dev?: boolean;
+};
 export type User = {
   id: number;
   nome: string;

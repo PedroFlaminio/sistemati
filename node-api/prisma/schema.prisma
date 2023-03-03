@@ -24,8 +24,8 @@ model Solicitacao {
   criticidade  String   @default("")
   resumo       String   @default("")
   reproduzivel Boolean  @default(true)
-  descricao    String   @default("")
-  sugestao     String   @default("")
+  descricao    String   @default("") @db.VarChar(2048)
+  sugestao     String   @default("") @db.VarChar(2048)
 
   area               String                 @default("")
   encaminhado        String                 @default("")
@@ -33,7 +33,7 @@ model Solicitacao {
   status             String                 @default("")
   prioridade         String                 @default("")
   complexidade       String                 @default("")
-  resolucao          String                 @default("")
+  resolucao          String                 @default("") @db.VarChar(2048)
   resolvido_por      String?
   resolvido_em       DateTime?
   testado_por        String?
@@ -66,6 +66,7 @@ model ArquivoSolicitacao {
   id             Int         @id @default(autoincrement())
   id_solicitacao Int
   nome_arquivo   String
+  tipo           String      @default("print")
   solicitacao    Solicitacao @relation(fields: [id_solicitacao], references: [id])
 
   @@map("solicitacao_arquivos")

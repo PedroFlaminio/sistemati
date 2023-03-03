@@ -7,6 +7,7 @@ import logo from "../assets/NovoLogo.png";
 import logoSistemati from "../assets/sistemati-logo.png";
 import useModule from "./Module/context";
 import { useState } from "react";
+import { hasAcess } from "../utils/functions";
 
 const Header = () => {
   const [showModal, setShowModal] = useState(false);
@@ -33,7 +34,7 @@ const Header = () => {
       <div className="collapse navbar-collapse">
         <ul className="navbar-nav me-auto">
           {menus.map((menu, i) => {
-            if (menu.path && (!menu.roles || menu.roles.indexOf(usuario.role) > -1))
+            if (menu.path && hasAcess(usuario, menu))
               return (
                 <li
                   className="nav-item"
@@ -46,14 +47,7 @@ const Header = () => {
                   <button className={`btn btn-link nav-link ${location.pathname === menu.path ? "active" : ""}`}>{menu.label}</button>
                 </li>
               );
-            else if (menu.submenu)
-              return (
-                <li className="nav-item" key={i}>
-                  <DropDownButton label={menu.label} className={`btn btn-link nav-link ${location.pathname === menu.path ? "active" : ""}`}>
-                    <DropDownItem label="Enviar Aprovação" />
-                  </DropDownButton>
-                </li>
-              );
+            else return <></>;
           })}
         </ul>
         <ul className="navbar-nav">

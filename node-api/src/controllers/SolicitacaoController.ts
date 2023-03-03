@@ -9,7 +9,8 @@ const SolicitacaoController = {
   cancelar: async (request: Request, response: Response) => {
     try {
       const id = parseInt(request.params.id);
-      const result = await SolicitacaoService.cancelar(id);
+      const user = getUser(request.headers.authorization);
+      const result = await SolicitacaoService.cancelar(id, user);
       if (result) return response.status(200).json({ message: "Sucesso ao cancelar solicitação." });
       else return response.status(400).json({ message: "Erro ao cancelar solicitação." });
     } catch (err) {
@@ -61,14 +62,7 @@ const SolicitacaoController = {
   },
   insere: async (request: Request, response: Response) => {
     try {
-      const fields = request.fields;
-      let solicitacao: Solicitacao = {} as Solicitacao;
-      Object.keys(fields).forEach((key) => {
-        if (key.startsWith("id")) solicitacao[key] = parseInt(fields[key][0]);
-        else if (fields[key] === "true") solicitacao[key] = true;
-        else if (fields[key] === "false") solicitacao[key] = false;
-        else solicitacao[key] = fields[key];
-      });
+      let solicitacao = JSON.parse(request.fields.solicitacao as string); //👌👌👌
       const files = request.files;
       const user = getUser(request.headers.authorization);
       const result = await SolicitacaoService.insereSolicitacao(solicitacao, files, user);
@@ -80,15 +74,7 @@ const SolicitacaoController = {
   },
   atualiza: async (request: Request, response: Response) => {
     try {
-      const fields = request.fields;
-      let solicitacao: Solicitacao = {} as Solicitacao;
-      Object.keys(fields).forEach((key) => {
-        if (key.startsWith("id")) solicitacao[key] = parseInt(fields[key] as string);
-        else if (key === "arquivosDeleted") solicitacao[key] = JSON.parse(fields[key] as string);
-        else if (fields[key] === "true") solicitacao[key] = true;
-        else if (fields[key] === "false") solicitacao[key] = false;
-        else solicitacao[key] = fields[key];
-      });
+      let solicitacao = JSON.parse(request.fields.solicitacao as string);
       const files = request.files;
       const user = getUser(request.headers.authorization);
       const result = await SolicitacaoService.atualizaSolicitacao(solicitacao, files, user);
@@ -114,11 +100,16 @@ const SolicitacaoController = {
     try {
       const id = parseInt(request.params.id);
       const result = await SolicitacaoService.getArquivo(id);
-      if (result) return response.status(200).sendFile(result);
-      else return response.status(400).json({ message: "Erro ao acessar foto." });
+
+      if (result) {
+        response.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        const filename = result.split("\\")[result.split("\\").length - 1].split("-");
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+        response.end();
+      } else return response.status(400).json({ message: "Erro ao acessar arquivo." });
     } catch (err) {
       console.log(err);
-      return response.status(400).json({ message: "Erro ao acessar foto." });
+      return response.status(400).json({ message: "Erro ao acessar arquivo." });
     }
   },
   getFoto: async (request: Request, response: Response) => {

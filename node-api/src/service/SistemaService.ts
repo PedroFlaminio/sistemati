@@ -16,7 +16,7 @@ const SistemaService = {
       let results = await prismaClient.sistema.findMany({
         orderBy: { nome: "asc" },
         include: { responsavel: true, reserva: true },
-        where: { ativo: false },
+        where: { ativo: true },
       });
       return results;
     } catch (e) {
@@ -28,7 +28,11 @@ const SistemaService = {
     try {
       const { id, reserva, responsavel, solicitacoes, id_reserva, id_responsavel, ...otheProps } = sistema;
       await prismaClient.sistema.create({
-        data: { ...otheProps, reserva: { connect: { id: reserva?.id } }, responsavel: { connect: { id: responsavel?.id } } },
+        data: {
+          ...otheProps,
+          reserva: { connect: reserva ? { id: reserva?.id } : { id: 0 } },
+          responsavel: { connect: responsavel ? { id: responsavel?.id } : { id: 0 } },
+        },
       });
       return true;
     } catch (e) {

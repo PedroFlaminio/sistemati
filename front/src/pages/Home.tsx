@@ -15,7 +15,6 @@ const Home = () => {
       axios
         .get(`${ApiURL}foto/${usuario.matricula}`)
         .then((resp) => {
-          console.log(resp.data);
           //console.log(resp);
           setFoto(resp.data);
         })
@@ -28,11 +27,6 @@ const Home = () => {
           <h1 className="text-primary home-title text-center mt-5">Sistema TI</h1>
           <h4 className="text-center my-3 pb-5">Sistema de gestão de chamados de Desenvolvimento.</h4>
           <div className="text-center mt-5"></div>
-          <img
-            src={`data:image/jpeg;base64,${foto}`}
-            alt="Foto"
-            style={{ width: 300, height: 300, borderRadius: 300, objectFit: "cover" }}
-          />
         </div>
         <div className="col-6 bg-secondary p-0" style={{ backgroundImage: `url(${keyboard})`, backgroundSize: "cover" }}></div>
         {/* <img src={`data:image/jpeg;base64,${foto}`} alt="logotipo" /> */}

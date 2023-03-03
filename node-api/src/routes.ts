@@ -18,7 +18,7 @@ router.get("/sistemas", ensureAuthenticated, SistemaController.lista);
 router.post("/sistemas", ensureAuthenticated, SistemaController.insere);
 router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
 router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
-router.put("/sistemasAtivos", ensureAuthenticated, SistemaController.listaAtivos);
+router.get("/sistemasAtivos", ensureAuthenticated, SistemaController.listaAtivos);
 //SOLICITAÇÕES
 router.get("/solicitacoes/:id", ensureAuthenticated, SolicitacaoController.getById);
 router.get("/solicitacoes", ensureAuthenticated, SolicitacaoController.listaSolicitacoesPendentes);

@@ -5,7 +5,7 @@ import List from "../components/Module/list";
 import useModule from "../components/Module/context";
 import Form from "../components/Module/form";
 import Input from "../components/Module/input";
-import Table, { SearchRule, TableColumn } from "../components/Module/table";
+import Table, { FilterRule, SearchRule, TableColumn } from "../components/Module/table";
 import FilterInput from "../components/Module/filterInput";
 import useApi from "../context/ApiContext";
 import yup from "../utils/schemas";
@@ -16,21 +16,29 @@ import Checkbox from "../components/Module/checkbox";
 import TextArea from "../components/Module/textArea";
 import DateInput from "../components/Module/dateInput";
 import { dateStrToLocale, dateTimeToDateStrUs, jsDateToDate } from "../utils/functions";
-import PrintList from "../components/Module/printList";
+import FileList from "../components/Module/fileList";
 import { Tab, TabView } from "../components/TabView";
 import { useParams } from "react-router-dom";
 import { ApiURL } from "../configs";
+import FilterSelect from "../components/Module/filterSelect";
 
 const SolicitacoesSchema = yup.object().shape({
   id_sistema: yup.number().required().moreThan(0, "Sistema: Campo obrigatório.").label("Sistema"),
   resumo: yup.string().required().label("Resumo do problema"),
   descricao: yup.string().required().label("Problema e como reproduzir"),
 });
+const TIPOS_ERROS = ["Erro no sistema", "Melhoria", "Sistema Inacessível"];
+const STATUS = ["Nova", "Em Análise", "Em Andamento", "Em Espera", "Resolvido"];
+const CRITICIDADE = ["Média", "Grave", "Urgente"];
 
 const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) => {
   const { id } = useParams();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
+  const [filterStatus, setFilterStatus] = useState<FilterRule>();
+  const [filterDev, setFilterDev] = useState<FilterRule>();
+  const [filterSistema, setFilterSistema] = useState<FilterRule>();
 
   const [devOptions, setDevOptions] = useState<string[]>([]);
   const [devValues, setDevValues] = useState<number[]>([]);
@@ -47,16 +55,15 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     putSolicitacao,
     deleteSolicitacao,
     cancelarSolicitacao,
-    getDevs,
-    getSistemas,
+    getDevsAtivos,
+    getSistemasAtivos,
     loaded,
   } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
     if (loaded) {
       updateList();
-
-      getDevs((list) => {
+      getDevsAtivos((list) => {
         const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
         const labels = ["Não Definido"];
         const values = [0];
@@ -70,8 +77,13 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         }
         setDevOptions(labels);
         setDevValues(values);
+        const currentDev = list.find((d) => d.matricula === usuario.matricula);
+        if (currentDev && props.tipo === "Pendentes") {
+          const newFilter: FilterRule = { field: "dev.id", data: currentDev.id.toString(), operation: "CN", type: "S" };
+          setFilterDev(newFilter);
+        } else setFilterDev(undefined);
       });
-      getSistemas((list) => {
+      getSistemasAtivos((list) => {
         const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
         const labels = ["Não Definido"];
         const values = [0];
@@ -96,7 +108,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     else if (props.tipo === "Pendentes") getSolicitacoes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
     else if (props.tipo === "Resolvidas") getSolicitacoesResolvidas((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
   };
-  const columns: TableColumn[] = [
+  const columnsMinhas: TableColumn[] = [
     { label: "Id", field: "id" },
     { label: "Resumo", field: "resumo" },
     { label: "Tipo", field: "tipo" },
@@ -104,14 +116,14 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     { label: "Criticidade", field: "criticidade" },
     { label: "Sistema", field: "sistema.nome" },
     { label: "Usuário", field: "nome" },
-    // { label: "Ordem", field: "ordem" },
+    { label: "Desenvolvedor", field: "dev.nome" },
+    { label: "Ordem", field: "ordem" },
     { label: "Aberto Em", field: "dataCriacao", formatter: dateStrToLocale },
     { label: "Atualizado Em", field: "updatedAt", formatter: dateStrToLocale },
   ];
   const Buttons = () => {
-    const { setMode, setItem, mode, item } = useModule();
+    const { setMode, setItem, mode, item, setPrintList, setFilesList } = useModule();
     const handleNew = () => {
-      console.log(usuario);
       setItem({});
       setItem({
         id: "Novo",
@@ -122,19 +134,14 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         tipo: "Erro no sistema",
         criticidade: "Média",
       });
+      setPrintList([]);
+      setFilesList([]);
       setMode("Insert");
     };
     const handleEdit = () => {
       getSolicitacaoById(item.id, (solicitacao) => {
-        console.log(solicitacao);
         setItem({ ...solicitacao });
         setMode("Edit");
-      });
-    };
-    const handleDelete = () => {
-      getSolicitacaoById(item.id, (solicitacao) => {
-        setItem({ ...solicitacao });
-        setMode("Delete");
       });
     };
     const handleView = () => {
@@ -146,6 +153,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     const handleCancelar = () => {
       cancelarSolicitacao(item.id, () => {
         setMode("List");
+        updateList();
       });
     };
     const cantInsert = mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || usuario.role === "ROLE_VISITANTE";
@@ -165,15 +173,69 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     const handleSearchChange = (value: string) => {
       if (value !== "") {
         const searchFilter: SearchRule = {
-          fields: ["id", "resumo", "tipo", "criticidade", "username", "dataCriacao", "updatedAt"],
+          fields: [
+            "id",
+            "resumo",
+            "tipo",
+            "status",
+            "criticidade",
+            "criticidade",
+            "sistema.nome",
+            "nome",
+            "dev.nome",
+            "dataCriacao",
+            "updatedAt",
+          ],
           data: value,
           op: "CT",
         };
         setFilterSearch(searchFilter);
       } else setFilterSearch(undefined);
     };
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      if (e.currentTarget.value !== "") {
+        const newFilter: FilterRule = { field: "status", data: e.currentTarget.value, operation: "CN", type: "S" };
+        setFilterStatus(newFilter);
+      } else setFilterStatus(undefined);
+    };
+    const handleDevChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      if (e.currentTarget.value !== "") {
+        const newFilter: FilterRule = { field: "dev.id", data: e.currentTarget.value, operation: "CN", type: "S" };
+        setFilterDev(newFilter);
+      } else setFilterDev(undefined);
+    };
+    const handleSistemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      if (e.currentTarget.value !== "") {
+        const newFilter: FilterRule = { field: "sistema.id", data: e.currentTarget.value, operation: "CN", type: "S" };
+        setFilterSistema(newFilter);
+      } else setFilterSistema(undefined);
+    };
     return (
       <div className="row row-cols-auto p-2 bg-light border-light border rounded-bottom mx-0 justify-content-end">
+        <FilterSelect
+          size={2}
+          label="Status"
+          onChange={handleStatusChange}
+          options={["Todos", ...STATUS]}
+          values={["", ...STATUS]}
+          value={filterStatus?.data}
+        />
+        <FilterSelect
+          size={2}
+          label="Sistema"
+          onChange={handleSistemaChange}
+          options={["Todos", ...sisOptions]}
+          values={["", ...sisValues]}
+          value={filterSistema?.data}
+        />
+        <FilterSelect
+          size={2}
+          label="Dev"
+          onChange={handleDevChange}
+          options={["Todos", ...devOptions]}
+          values={["", ...devValues]}
+          value={filterDev?.data}
+        />
         <FilterInput placeholder="Pesquisar..." defaultValue={filterSearch?.data} handleBtnClick={handleSearchChange} />
       </div>
     );
@@ -182,6 +244,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     const { setItem, setMode, item, mode } = useModule();
     useEffect(() => {
       if (id && mode !== "View") setMode("View");
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode]);
     const handleSelect = (id: number) => {
       const find = solicitacoes.find((o) => o.id === id);
@@ -200,16 +263,17 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         id="solicitacoes"
         order={props.tipo === "Pendentes" ? "ordem" : "updatedAt"}
         data={solicitacoes}
-        columns={columns}
+        columns={columnsMinhas}
         handleSelect={handleSelect}
         handleDoubleClick={handleDbClick}
         footer={Filtros}
         searchFilter={filterSearch}
+        filters={[filterStatus, filterDev, filterSistema]}
       />
     );
   };
   const ModuleForm = () => {
-    const { setMode, setItem, mode, item, files, fileList, setFiles } = useModule();
+    const { setMode, setItem, mode, item, files, fileList, setFiles, printList } = useModule();
 
     useEffect(() => {
       if (loaded) {
@@ -228,37 +292,38 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       item.id_sistema = parseInt(item.id_sistema);
+      item.id_dev = parseInt(item.id_dev);
       var form_data = files;
-      var key: string;
       if (mode === "Insert") {
-        delete item.id;
-        for (key in item) {
-          form_data.append(key, item[key]);
+        form_data.append("solicitacao", JSON.stringify(item));
+        for (let index = 0; index < printList.length; index++) {
+          const element = printList[index];
+          form_data.append(`print[${index}]`, element);
         }
         for (let index = 0; index < fileList.length; index++) {
           const element = fileList[index];
-          form_data.append(`arquivos[${index}]`, element);
+          form_data.append(`arquivo[${index}]`, element);
         }
         postSolicitacao(form_data, () => {
           setMode("List");
           updateList();
         });
       } else if (mode === "Edit") {
-        const excluir = ["resolucao", "resolvido_por", "resolvido_em", "testado_por", "testado_em", "deferido", "historicos", "arquivos"];
         const arquivosDeleted = [];
         for (let index = 0; index < item.arquivos.length; index++) {
           const arq = item.arquivos[index];
           if (arq.deleted) arquivosDeleted.push(arq.id);
         }
         if (arquivosDeleted.length > 0) form_data.append(`arquivosDeleted`, JSON.stringify(arquivosDeleted));
-        for (key in item) {
-          if (excluir.indexOf(key) < 0) form_data.append(key, item[key]);
+        form_data.append("solicitacao", JSON.stringify(item));
+        for (let index = 0; index < printList.length; index++) {
+          const element = printList[index];
+          form_data.append(`print[${index}]`, element);
         }
         for (let index = 0; index < fileList.length; index++) {
           const element = fileList[index];
-          form_data.append(`arquivos[${index}]`, element);
+          form_data.append(`arquivo[${index}]`, element);
         }
-        // for (const value of form_data) console.log(value);
         putSolicitacao(form_data, () => {
           setMode("List");
           updateList();
@@ -269,8 +334,8 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
           updateList();
         });
       }
-      setItem({});
-      setFiles(new FormData());
+      //setItem({});
+      //setFiles(new FormData());
     };
     const columnsHistoricos = [
       { label: "Id", field: "id" },
@@ -279,9 +344,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       { label: "Usuário", field: "nome" },
     ];
     const HistoricosTable = () => <Table id="chamados_historicos" columns={columnsHistoricos} data={item.historicos} />;
-    const tiposDeErro = ["Erro no sistema", "Melhoria", "Sistema Inacessível"];
-    const status = ["Nova", "Em Análise", "Em Andamento", "Em Espera", "Resolvido"];
-    const criticidades = ["Média", "Grave", "Urgente"];
+
     return (
       <Form className="p-4" onSubmit={handleSubmit} schema={SolicitacoesSchema}>
         <div className="input-group">
@@ -295,8 +358,8 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         </div>
         <div className="input-group">
           <Select options={sisOptions} values={sisValues} field="id_sistema" label="Sistema" size={4} />
-          <Select options={tiposDeErro} values={tiposDeErro} field="tipo" label="Tipo" size={2} />
-          <Select options={criticidades} values={criticidades} field="criticidade" label="Criticidade" size={2} />
+          <Select options={TIPOS_ERROS} values={TIPOS_ERROS} field="tipo" label="Tipo" size={2} />
+          <Select options={CRITICIDADE} values={CRITICIDADE} field="criticidade" label="Criticidade" size={2} />
         </div>
         <div className="input-group">
           <Input field="resumo" label="Resumo do problema" size={6} />
@@ -312,23 +375,25 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         <div className="input-group mb-3">
           <TextArea label="Resolução sugerida(opcional)" field="sugestao" divClassName="px-2 col-12 col-xl-10" />
         </div>
-        <TabView tabClassName="tab-max" initial="Materiais">
+        <TabView tabClassName="tab-max" initial="Capturas de Tela">
           <Tab title="Capturas de Tela">
-            <PrintList field="arquivos" urlArquivos={ApiURL + "arquivos/"} />
+            <FileList field="prints" urlArquivos={ApiURL + "arquivos/"} accept="image/*" isPrint />
           </Tab>
-          <Tab title="Desenvolvimento">
+          <Tab title="Arquivos Anexos">
+            <FileList field="arquivos" urlArquivos={ApiURL + "arquivos/"} accept="*" />
+          </Tab>
+          <Tab title="Desenvolvimento" hide={!usuario.isDev}>
             <div className="input-group">
               <DateInput field="dataCriacao" label="Criado em" size={2} formatter={dateTimeToDateStrUs} readOnly />
               <Select options={devOptions} values={devValues} field="id_dev" label="Dev" size={2} />
-              <Select options={status} values={status} field="status" label="Status" size={2} />
-              <Select options={criticidades} values={criticidades} field="criticidade" label="Criticidade" size={2} />
+              <Select options={STATUS} values={STATUS} field="status" label="Status" size={2} />
               <Checkbox
                 field="solicitado_diretor"
                 label="Solicitado por um diretor"
                 tooltip="Marque se o problema é facilmente reproduzido, se possível descreva como chegou a esse erro"
               />
               <div className="input-group mb-3">
-                <TextArea field="sugestao" label="Resolução" divClassName="px-2 col-12 col-xl-10" />
+                <TextArea field="resolucao" label="Resolução" divClassName="px-2 col-12 col-xl-10" />
               </div>
             </div>
           </Tab>

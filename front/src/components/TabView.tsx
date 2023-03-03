@@ -37,6 +37,7 @@ const TabView = (props: TabViewProps) => {
         {props.children.map((elem: any, index) => {
           let style = "nav-item";
           let styleElem = "nav-link " + (index === selected ? "active text-primary bg-lighter font-weight-bold" : "text-dark");
+          if (elem.props.hide) return <></>;
           return (
             <li style={{ cursor: "pointer", userSelect: "none" }} key={"li" + index} className={style} onClick={() => handleChange(index)}>
               <div className={styleElem}>{elem.props.title}</div>
@@ -59,6 +60,7 @@ type TabProps = {
   title: string;
   children: ReactNode;
   className?: string;
+  hide?: boolean;
 };
 
 const Tab = (props: TabProps) => {

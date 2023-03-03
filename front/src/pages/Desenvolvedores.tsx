@@ -51,10 +51,6 @@ const Devs = () => {
       setItem({ ...item });
       setMode("Edit");
     };
-    const handleDelete = () => {
-      setItem({ ...item });
-      setMode("Delete");
-    };
     const handleView = () => {
       setItem({ ...item });
       setMode("View");
