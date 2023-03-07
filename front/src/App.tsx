@@ -48,8 +48,9 @@ const Rotas = () => {
               <Route path="/sistemas" element={<Sistemas />} />
               <Route path="/solicitacoes/:id" element={<Solicitacoes tipo="Pendentes" />} />
               <Route path="/minhasSolicitacoes" element={<Solicitacoes tipo="Minhas" />} />
-              <Route path="/solicitacoes" element={<Solicitacoes tipo="Pendentes" />} />
-              <Route path="/solicitacoesResolvidas" element={<Solicitacoes tipo="Resolvidas" />} />
+              <Route path="/minhasPendencias" element={<Solicitacoes tipo="Dev" />} />
+              <Route path="/solicitacoesPendentes" element={<Solicitacoes tipo="Pendentes" />} />
+              <Route path="/solicitacoes" element={<Solicitacoes tipo="Todas" />} />
             </Routes>
           </ApiContextProvider>
         </AlertProvider>

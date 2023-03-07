@@ -19,6 +19,7 @@ export type User = {
   isDev?: boolean;
   isAdm?: boolean;
   accessToken?: string;
+  id_dev?: number;
 };
 export type UserIntegrati = {
   id: number;

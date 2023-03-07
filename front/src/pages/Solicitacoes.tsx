@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Module from "../components/Module";
 import { Solicitacao } from "../utils/types";
 import List from "../components/Module/list";
@@ -21,6 +21,9 @@ import { Tab, TabView } from "../components/TabView";
 import { useParams } from "react-router-dom";
 import { ApiURL } from "../configs";
 import FilterSelect from "../components/Module/filterSelect";
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8080/");
 
 const SolicitacoesSchema = yup.object().shape({
   id_sistema: yup.number().required().moreThan(0, "Sistema: Campo obrigatório.").label("Sistema"),
@@ -28,11 +31,12 @@ const SolicitacoesSchema = yup.object().shape({
   descricao: yup.string().required().label("Problema e como reproduzir"),
 });
 const TIPOS_ERROS = ["Erro no sistema", "Melhoria", "Sistema Inacessível"];
-const STATUS = ["Nova", "Em Análise", "Em Andamento", "Em Espera", "Resolvido"];
+const STATUS = ["Nova", "Em Análise", "Em Andamento", "Em Espera", "Cancelado", "Resolvido"];
 const CRITICIDADE = ["Média", "Grave", "Urgente"];
 
-const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) => {
+const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Dev" | "Todas" }) => {
   const { id } = useParams();
+  const ref = useRef<HTMLAudioElement>(null);
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
 
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
@@ -50,6 +54,8 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     getSolicitacaoById,
     getSolicitacoes,
     getSolicitacoesByUser,
+    getSolicitacoesByDev,
+    getSolicitacoesPendentes,
     getSolicitacoesResolvidas,
     postSolicitacao,
     putSolicitacao,
@@ -61,8 +67,17 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
   } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
+    socket.on("solicitacoes", (a) => {
+      ref.current?.play();
+    });
+
+    return () => {
+      socket.off("solicitacoes");
+    };
+  }, []);
+
+  useEffect(() => {
     if (loaded) {
-      updateList();
       getDevsAtivos((list) => {
         const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
         const labels = ["Não Definido"];
@@ -77,11 +92,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         }
         setDevOptions(labels);
         setDevValues(values);
-        const currentDev = list.find((d) => d.matricula === usuario.matricula);
-        if (currentDev && props.tipo === "Pendentes") {
-          const newFilter: FilterRule = { field: "dev.id", data: currentDev.id.toString(), operation: "CN", type: "S" };
-          setFilterDev(newFilter);
-        } else setFilterDev(undefined);
+        // const currentDev = list.find((d) => d.matricula === usuario.matricula);
+        // if (currentDev && props.tipo === "Dev") {
+        //   const newFilter: FilterRule = { field: "dev.id", data: currentDev.id.toString(), operation: "CN", type: "S" };
+        //   setFilterDev(newFilter);
+        // } else setFilterDev(undefined);
       });
       getSistemasAtivos((list) => {
         const sortedList = list.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -98,6 +113,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         setSisOptions(labels);
         setSisValues(values);
       });
+      updateList();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, props.tipo]);
@@ -105,8 +121,10 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
   const updateList = () => {
     if (id !== undefined) return;
     else if (props.tipo === "Minhas") getSolicitacoesByUser((list: Solicitacao[]) => setSolicitacoes(list));
-    else if (props.tipo === "Pendentes") getSolicitacoes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
-    else if (props.tipo === "Resolvidas") getSolicitacoesResolvidas((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
+    else if (props.tipo === "Dev")
+      getSolicitacoesByDev(usuario.matricula, (list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
+    else if (props.tipo === "Pendentes") getSolicitacoesPendentes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
+    else if (props.tipo === "Todas") getSolicitacoes((list: Solicitacao[]) => setSolicitacoes(list.filter((d) => d.id > 0)));
   };
   const columnsMinhas: TableColumn[] = [
     { label: "Id", field: "id" },
@@ -117,7 +135,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     { label: "Sistema", field: "sistema.nome" },
     { label: "Usuário", field: "nome" },
     { label: "Desenvolvedor", field: "dev.nome" },
-    { label: "Ordem", field: "ordem" },
+    // { label: "Ordem", field: "ordem" },
     { label: "Aberto Em", field: "dataCriacao", formatter: dateStrToLocale },
     { label: "Atualizado Em", field: "updatedAt", formatter: dateStrToLocale },
   ];
@@ -142,12 +160,16 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       getSolicitacaoById(item.id, (solicitacao) => {
         setItem({ ...solicitacao });
         setMode("Edit");
+        setPrintList([]);
+        setFilesList([]);
       });
     };
     const handleView = () => {
       getSolicitacaoById(item.id, (solicitacao) => {
         setItem({ ...solicitacao });
         setMode("View");
+        setPrintList([]);
+        setFilesList([]);
       });
     };
     const handleCancelar = () => {
@@ -241,7 +263,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
     );
   };
   const ModuleTable = () => {
-    const { setItem, setMode, item, mode } = useModule();
+    const { setItem, setMode, item, mode, setFilesList, setPrintList } = useModule();
     useEffect(() => {
       if (id && mode !== "View") setMode("View");
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -256,6 +278,8 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       getSolicitacaoById(item.id, (solicitacao) => {
         setItem({ ...solicitacao });
         setMode("View");
+        setPrintList([]);
+        setFilesList([]);
       });
     };
     return (
@@ -293,7 +317,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
       e.preventDefault();
       item.id_sistema = parseInt(item.id_sistema);
       item.id_dev = parseInt(item.id_dev);
-      var form_data = files;
+      var form_data = new FormData();
       if (mode === "Insert") {
         form_data.append("solicitacao", JSON.stringify(item));
         for (let index = 0; index < printList.length; index++) {
@@ -314,6 +338,11 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
           const arq = item.arquivos[index];
           if (arq.deleted) arquivosDeleted.push(arq.id);
         }
+        for (let index = 0; index < item.prints.length; index++) {
+          const arq = item.prints[index];
+          if (arq.deleted) arquivosDeleted.push(arq.id);
+        }
+        item.arquivosDeleted = arquivosDeleted;
         if (arquivosDeleted.length > 0) form_data.append(`arquivosDeleted`, JSON.stringify(arquivosDeleted));
         form_data.append("solicitacao", JSON.stringify(item));
         for (let index = 0; index < printList.length; index++) {
@@ -377,7 +406,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         </div>
         <TabView tabClassName="tab-max" initial="Capturas de Tela">
           <Tab title="Capturas de Tela">
-            <FileList field="prints" urlArquivos={ApiURL + "arquivos/"} accept="image/*" isPrint />
+            <FileList field="prints" urlArquivos={ApiURL + "prints/"} accept="image/*" isPrint />
           </Tab>
           <Tab title="Arquivos Anexos">
             <FileList field="arquivos" urlArquivos={ApiURL + "arquivos/"} accept="*" />
@@ -428,6 +457,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Resolvidas" }) =>
         <ModuleTable />
       </List>
       <ModuleForm />
+      <audio src={require("../assets/audio.mp3")} ref={ref} autoPlay />
     </Module>
   );
 };

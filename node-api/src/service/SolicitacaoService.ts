@@ -21,7 +21,6 @@ export const SolicitacaoService = {
           solicitacao: { connect: { id } },
         },
       });
-
       return results;
     } catch (e) {
       console.log(e);
@@ -36,6 +35,18 @@ export const SolicitacaoService = {
       });
       const { arquivos, ...otherProps } = results;
       return { ...otherProps, arquivos: arquivos.filter((a) => a.tipo === "arquivo"), prints: arquivos.filter((a) => a.tipo === "print") };
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
+  lista: async () => {
+    try {
+      let results = await prismaClient.solicitacao.findMany({
+        include: { sistema: true, dev: true },
+        orderBy: { dataCriacao: "asc" },
+      });
+      return results;
     } catch (e) {
       console.log(e);
       return false;
@@ -56,10 +67,6 @@ export const SolicitacaoService = {
         else if (element.criticidade === "Grave") ordem += 3;
         else if (element.criticidade === "Urgente") ordem += 5;
         if (element.solicitado_diretor) ordem += 1;
-        console.log(element.id);
-        console.log(element.criticidade);
-        console.log(element.solicitado_diretor);
-        console.log(ordem);
         ordenados.push({ ...element, ordem });
       }
       ordenados.sort((a, b) => a.ordem);
@@ -83,6 +90,15 @@ export const SolicitacaoService = {
     try {
       console.log(username);
       let results = await prismaClient.solicitacao.findMany({ where: { username }, include: { sistema: true, dev: true } });
+      return results;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
+  listaSolicitacoesByDev: async (matricula: number) => {
+    try {
+      let results = await prismaClient.solicitacao.findMany({ where: { dev: { matricula } }, include: { sistema: true, dev: true } });
       return results;
     } catch (e) {
       console.log(e);

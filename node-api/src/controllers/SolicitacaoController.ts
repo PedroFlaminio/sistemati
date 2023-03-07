@@ -39,6 +39,16 @@ const SolicitacaoController = {
       return response.status(400).json({ message: "Erro ao listar solicitações." });
     }
   },
+  lista: async (request: Request, response: Response) => {
+    try {
+      const result = await SolicitacaoService.lista();
+      if (result) return response.status(200).json(result);
+      else return response.status(400).json({ message: "Erro ao listar solicitações." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao listar solicitações." });
+    }
+  },
   listaSolicitacoesResolvidas: async (request: Request, response: Response) => {
     try {
       const result = await SolicitacaoService.listaSolicitacoesResolvidas();
@@ -53,6 +63,17 @@ const SolicitacaoController = {
     try {
       const usuario = getUserName(request.headers.authorization);
       const result = await SolicitacaoService.listaSolicitacoesByUser(usuario);
+      if (result) return response.status(200).json(result);
+      else return response.status(400).json({ message: "Erro ao listar solicitações." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao listar solicitações." });
+    }
+  },
+  listaSolicitacoesByDev: async (request: Request, response: Response) => {
+    try {
+      const matricula = parseInt(request.params.matricula);
+      const result = await SolicitacaoService.listaSolicitacoesByDev(matricula);
       if (result) return response.status(200).json(result);
       else return response.status(400).json({ message: "Erro ao listar solicitações." });
     } catch (err) {
@@ -103,10 +124,26 @@ const SolicitacaoController = {
 
       if (result) {
         response.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        const filename = result.split("\\")[result.split("\\").length - 1].split("-");
+        const filename = result.split("\\")[result.split("\\").length - 1].split("-")[1];
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);
         response.end();
       } else return response.status(400).json({ message: "Erro ao acessar arquivo." });
+    } catch (err) {
+      console.log(err);
+      return response.status(400).json({ message: "Erro ao acessar arquivo." });
+    }
+  },
+  getPrint: async (request: Request, response: Response) => {
+    try {
+      const id = parseInt(request.params.id);
+      const result = await SolicitacaoService.getArquivo(id);
+      if (typeof result === "string" && result.endsWith("svg")) response.setHeader("Content-Type", "image/svg+xml");
+      else if (typeof result === "string" && result.endsWith("png")) response.setHeader("Content-Type", "image/png");
+      else if (typeof result === "string" && result.endsWith("gif")) response.setHeader("Content-Type", "image/gif");
+      else if (typeof result === "string" && (result.endsWith("jpeg") || result.endsWith("jpg")))
+        response.setHeader("Content-Type", "image/jpeg");
+      if (result) return response.status(200).sendFile(result);
+      else return response.status(400).json({ message: "Erro ao acessar arquivo." });
     } catch (err) {
       console.log(err);
       return response.status(400).json({ message: "Erro ao acessar arquivo." });
@@ -117,15 +154,13 @@ const SolicitacaoController = {
       const matricula = parseInt(request.params.matricula);
       console.log(matricula);
 
-      let foto = ""; //"data:image/jpeg;base64";
+      let foto = "";
       const x = await axios
         .get(
           `https://urbamsjc.com.br/api/foto_colaborador/${matricula}/CFBDCB9C5B7936A8DE6B5EBEC22BC23BC911FB2286CFD320DAD371975CB2EEE0BA79758A3445E70468D16997DBB63D6DF51BFB3D9DD2A699B18285719ACC`
         )
         .then((resp) => {
-          //console.log(resp.data.b64);
           foto += resp.data.b64;
-          //setFoto(resp.data);
         })
         .catch((error) => console.log(error));
       let base64Image = foto.split(";base64,").pop();

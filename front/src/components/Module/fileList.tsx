@@ -149,10 +149,13 @@ const FileList = (props: PrintListProps) => {
   return (
     <div className="d-flex flex-wrap col-12 px-1">
       {(item[field] as Arquivo[])?.map((p, i) => {
-        return !p.deleted && props.isPrint ? (
-          <Print src={urlArquivos + p.id} key={i} gravado index={i} />
-        ) : (
-          <File src={urlArquivos + p.id} key={i} gravado index={i} name={p.nome_arquivo} />
+        return (
+          !p.deleted &&
+          (props.isPrint ? (
+            <Print src={urlArquivos + p.id} key={i} gravado index={i} />
+          ) : (
+            <File src={urlArquivos + p.id} key={i} gravado index={i} name={p.nome_arquivo} />
+          ))
         );
       })}
       {prints?.map((p, i) => {

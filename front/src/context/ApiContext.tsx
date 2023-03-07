@@ -30,8 +30,10 @@ type ApiType = {
   //SOLICITACOES
   getSolicitacaoById: (id: number, callback: (solicitacao: Solicitacao) => any) => Promise<void>;
   getSolicitacoes: (callback: (list: Solicitacao[]) => any) => Promise<void>;
+  getSolicitacoesPendentes: (callback: (list: Solicitacao[]) => any) => Promise<void>;
   getSolicitacoesResolvidas: (callback: (list: Solicitacao[]) => any) => Promise<void>;
   getSolicitacoesByUser: (callback: (list: Solicitacao[]) => any) => Promise<void>;
+  getSolicitacoesByDev: (matricula: number, callback: (list: Solicitacao[]) => any) => Promise<void>;
   postSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   putSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   deleteSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
@@ -350,6 +352,21 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
+  const getSolicitacoesPendentes = async (callback: (list: Solicitacao[]) => {}) => {
+    setLoading(true);
+    api
+      .get("solicitacoesPendentes")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
   const getSolicitacoesResolvidas = async (callback: (list: Solicitacao[]) => {}) => {
     setLoading(true);
     api
@@ -369,6 +386,21 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     setLoading(true);
     api
       .get("solicitacoesByUser")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const getSolicitacoesByDev = async (matricula: number, callback: (list: Solicitacao[]) => {}) => {
+    setLoading(true);
+    api
+      .get("solicitacoesByDev/" + matricula.toString())
       .then((resp) => {
         callback(resp.data);
         if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
@@ -685,8 +717,10 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         //SOLICITACOES
         getSolicitacaoById,
         getSolicitacoes,
+        getSolicitacoesPendentes,
         getSolicitacoesResolvidas,
         getSolicitacoesByUser,
+        getSolicitacoesByDev,
         postSolicitacao,
         putSolicitacao,
         deleteSolicitacao,
