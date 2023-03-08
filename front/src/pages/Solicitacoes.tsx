@@ -23,8 +23,6 @@ import { ApiURL } from "../configs";
 import FilterSelect from "../components/Module/filterSelect";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8080/");
-
 const SolicitacoesSchema = yup.object().shape({
   id_sistema: yup.number().required().moreThan(0, "Sistema: Campo obrigatório.").label("Sistema"),
   resumo: yup.string().required().label("Resumo do problema"),
@@ -36,7 +34,9 @@ const CRITICIDADE = ["Média", "Grave", "Urgente"];
 
 const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Dev" | "Todas" }) => {
   const { id } = useParams();
-  const ref = useRef<HTMLAudioElement>(null);
+  const refNabuco = useRef<HTMLAudioElement>(null);
+  const refNova = useRef<HTMLAudioElement>(null);
+  const refUsuario = useRef<HTMLAudioElement>(null);
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
 
   const [filterSearch, setFilterSearch] = useState<SearchRule>();
@@ -67,14 +67,25 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Dev" | "Todas" })
   } = useApi();
   const { usuario } = useApp();
   useEffect(() => {
-    socket.on("solicitacoes", (a) => {
-      ref.current?.play();
-    });
-
-    return () => {
-      socket.off("solicitacoes");
-    };
-  }, []);
+    if (loaded) {
+      if (props.tipo === "Pendentes") {
+        console.log(props.tipo);
+        //const socket = io(ApiURL.replace("sistemati-api/", ""));
+        const socket = io(ApiURL + "io", { path: "/sistemati-api/io" });
+        socket.on("solicitacoes", (a) => {
+          console.log(a, "entrou");
+          if (a === "novaSolicitacao") {
+            console.log(a, "entrou");
+            refNova.current?.play();
+          }
+          updateList();
+        });
+        return () => {
+          socket.off("solicitacoes");
+        };
+      }
+    }
+  }, [loaded, props.tipo]);
 
   useEffect(() => {
     if (loaded) {
@@ -457,7 +468,7 @@ const Solicitacoes = (props: { tipo: "Minhas" | "Pendentes" | "Dev" | "Todas" })
         <ModuleTable />
       </List>
       <ModuleForm />
-      <audio src={require("../assets/audio.mp3")} ref={ref} autoPlay />
+      <audio src={require("../assets/mgs.mp3")} ref={refNova} />
     </Module>
   );
 };

@@ -86,6 +86,7 @@ const SolicitacaoController = {
       let solicitacao = JSON.parse(request.fields.solicitacao as string); //👌👌👌
       const files = request.files;
       const user = getUser(request.headers.authorization);
+      console.log(solicitacao);
       const result = await SolicitacaoService.insereSolicitacao(solicitacao, files, user);
       if (result) return response.status(200).json({ message: "Sucesso ao cadastrar solicitação." });
       else return response.status(400).json({ message: "Erro ao cadastar solicitação." });

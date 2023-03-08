@@ -3,6 +3,7 @@ import prismaClient from "../prisma";
 import { Solicitacao, User } from "../types";
 import fs from "fs";
 import path from "path";
+import { io } from "../app";
 
 export const SolicitacaoService = {
   cancelar: async (id: number, user: User) => {
@@ -55,7 +56,7 @@ export const SolicitacaoService = {
   listaSolicitacoesPendentes: async () => {
     try {
       let results = await prismaClient.solicitacao.findMany({
-        where: { NOT: { OR: [{ status: "Resolvido" }, { status: "Cancelado" }] } },
+        where: { NOT: { OR: [{ status: "Resolvido" }, { status: "Cancelado" }] }, OR: [{ dev: null }, { id_dev: 0 }] },
         include: { sistema: true, dev: true },
         orderBy: { dataCriacao: "asc" },
       });
@@ -145,6 +146,7 @@ export const SolicitacaoService = {
           fs.copyFileSync(element.path, path.join(process.env.FOLDER, nomeArquivo));
         }
       }
+      io.of("/sistemati-api").emit("solicitacoes", "novaSolicitacao");
       return true;
     } catch (e) {
       console.log(e);

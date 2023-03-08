@@ -6,7 +6,7 @@ import DropDownItem from "./Module/dropdownItem";
 import logo from "../assets/NovoLogo.png";
 import logoSistemati from "../assets/sistemati-logo.png";
 import useModule from "./Module/context";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { hasAcess } from "../utils/functions";
 
 const Header = () => {
@@ -47,7 +47,7 @@ const Header = () => {
                   <button className={`btn btn-link nav-link ${location.pathname === menu.path ? "active" : ""}`}>{menu.label}</button>
                 </li>
               );
-            else return <></>;
+            else return <Fragment key={i}></Fragment>;
           })}
         </ul>
         <ul className="navbar-nav">

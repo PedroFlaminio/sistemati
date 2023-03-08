@@ -39,8 +39,22 @@ router.post("/email", EmailController.enviaEmail);
 router.get("/clock", (req, res) => {
   const date = new Date();
   console.log(date);
-  io.emit("solicitacoes", "voadora");
   return res.status(200).json(date);
+});
+router.get("/novaSolicitacao", (req, res) => {
+  io
+    //
+    .of("/sistemati-api/io")
+    .emit("solicitacoes", "novaSolicitacao");
+  return res.status(200).send("novaSolicitacao");
+});
+router.get("/usuarisse", (req, res) => {
+  io.emit("solicitacoes", "usuarisse");
+  return res.status(200).send("usuarisse");
+});
+router.get("/nabuco", (req, res) => {
+  io.emit("solicitacoes", "nabuco");
+  return res.status(200).send("nabuco");
 });
 
 export { router };

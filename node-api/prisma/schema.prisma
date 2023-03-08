@@ -13,7 +13,7 @@ datasource db {
 model Solicitacao {
   id           Int      @id @default(autoincrement())
   id_sistema   Int
-  id_dev       Int?
+  id_dev       Int      @default(0)
   matricula    Int      @default(0)
   username     String   @default("")
   nome         String   @default("")

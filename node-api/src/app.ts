@@ -11,9 +11,15 @@ const app = express();
 
 const serverHttp = http.createServer(app);
 
-const io = new Server(serverHttp, { cors: { origin: "*" } });
+//const io = new Server(serverHttp, { cors: { origin: "*" } });
+const io = new Server(serverHttp, { cors: { origin: "*" }, path: "/sistemati-api/io" });
+//var io = require("socket.io")(http);
+//var io = require("socket.io")(serverHttp, { path: "/sistemati-api/io" }).listen(serverHttp);
 
-io.on("connection", (socket) => console.log(`Usuário conectado no socket ${socket.id}`));
+io
+  //
+  .of("/sistemati-api/io")
+  .on("connection", (socket) => console.log(`Usuário conectado no socket ${socket.id}`));
 
 app.use(express.json());
 app.use(function (req, res, next) {
