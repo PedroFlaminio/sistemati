@@ -6,22 +6,20 @@ import { Fields } from "formidable";
 import axios from "axios";
 
 const SolicitacaoController = {
-  cancelar: async (request: Request, response: Response) => {
-    try {
-      const id = parseInt(request.params.id);
-      const user = getUser(request.headers.authorization);
-      const result = await SolicitacaoService.cancelar(id, user);
-      if (result) return response.status(200).json({ message: "Sucesso ao cancelar solicitação." });
-      else return response.status(400).json({ message: "Erro ao cancelar solicitação." });
-    } catch (err) {
-      console.log(err.message);
-      return response.status(400).json({ message: "Erro ao cancelar solicitação." });
-    }
-  },
   getById: async (request: Request, response: Response) => {
     try {
       const id = parseInt(request.params.id);
       const result = await SolicitacaoService.getById(id);
+      if (result) return response.status(200).json(result);
+      else return response.status(400).json({ message: "Erro ao listar solicitações." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao listar solicitações." });
+    }
+  },
+  listaSolicitacoesAguardando: async (request: Request, response: Response) => {
+    try {
+      const result = await SolicitacaoService.listaSolicitacoesAguardando();
       if (result) return response.status(200).json(result);
       else return response.status(400).json({ message: "Erro ao listar solicitações." });
     } catch (err) {
@@ -169,6 +167,42 @@ const SolicitacaoController = {
     } catch (err) {
       console.log(err);
       return response.status(400).json({ message: "Erro ao acessar foto." });
+    }
+  },
+  cancelar: async (request: Request, response: Response) => {
+    try {
+      const id = parseInt(request.params.id);
+      const user = getUser(request.headers.authorization);
+      const result = await SolicitacaoService.cancelar(id, user);
+      if (result) return response.status(200).json({ message: "Sucesso ao cancelar solicitação." });
+      else return response.status(400).json({ message: "Erro ao cancelar solicitação." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao cancelar solicitação." });
+    }
+  },
+  encaminha: async (request: Request, response: Response) => {
+    try {
+      const { id_dev, id_solicitacao } = request.body;
+      const user = getUser(request.headers.authorization);
+      const result = await SolicitacaoService.encaminha(id_dev, id_solicitacao, user);
+      if (result) return response.status(200).json({ message: "Sucesso ao atribuir solicitação." });
+      else return response.status(400).json({ message: "Erro ao atribuir solicitação." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao atribuir solicitação." });
+    }
+  },
+  aprova: async (request: Request, response: Response) => {
+    try {
+      const id = parseInt(request.params.id);
+      const user = getUser(request.headers.authorization);
+      const result = await SolicitacaoService.aprova(id, user);
+      if (result) return response.status(200).json({ message: "Sucesso ao atribuir solicitação." });
+      else return response.status(400).json({ message: "Erro ao atribuir solicitação." });
+    } catch (err) {
+      console.log(err.message);
+      return response.status(400).json({ message: "Erro ao atribuir solicitação." });
     }
   },
 };

@@ -50,6 +50,7 @@ const Rotas = () => {
               <Route path="/minhasSolicitacoes" element={<Solicitacoes tipo="Minhas" />} />
               <Route path="/minhasPendencias" element={<Solicitacoes tipo="Dev" />} />
               <Route path="/solicitacoesPendentes" element={<Solicitacoes tipo="Pendentes" />} />
+              <Route path="/solicitacoesAguardando" element={<Solicitacoes tipo="Aguardando" />} />
               <Route path="/solicitacoes" element={<Solicitacoes tipo="Todas" />} />
             </Routes>
           </ApiContextProvider>

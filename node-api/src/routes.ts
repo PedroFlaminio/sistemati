@@ -6,6 +6,7 @@ import { SolicitacaoController } from "./controllers/SolicitacaoController";
 import { ensureAuthenticated } from "./middleware/ensureAuthenticated";
 import formidableMiddleware from "express-formidable";
 import { io } from "./app";
+import SeedController from "./controllers/SeedController";
 
 const router = Router();
 //DEVS
@@ -21,19 +22,25 @@ router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
 router.put("/sistemas", ensureAuthenticated, SistemaController.atualiza);
 router.get("/sistemasAtivos", ensureAuthenticated, SistemaController.listaAtivos);
 //SOLICITAÇÕES
-router.get("/solicitacoes/:id", ensureAuthenticated, SolicitacaoController.getById);
+router.get("/solicitacoes", ensureAuthenticated, SolicitacaoController.lista);
 router.get("/solicitacoesByUser", ensureAuthenticated, SolicitacaoController.listaSolicitacoesByUser);
 router.get("/solicitacoesByDev/:matricula", ensureAuthenticated, SolicitacaoController.listaSolicitacoesByDev);
-router.get("/solicitacoes", ensureAuthenticated, SolicitacaoController.lista);
 router.get("/solicitacoesPendentes", ensureAuthenticated, SolicitacaoController.listaSolicitacoesPendentes);
+router.get("/solicitacoesAguardando", ensureAuthenticated, SolicitacaoController.listaSolicitacoesAguardando);
 router.get("/solicitacoesResolvidas", ensureAuthenticated, SolicitacaoController.listaSolicitacoesResolvidas);
-router.get("/solicitacoes/cancelar/:id", ensureAuthenticated, SolicitacaoController.cancelar);
+
 router.post("/solicitacoes", ensureAuthenticated, formidableMiddleware(), SolicitacaoController.insere);
 router.put("/solicitacoes", ensureAuthenticated, formidableMiddleware(), SolicitacaoController.atualiza);
+
+router.put("/solicitacoes/encaminhar", ensureAuthenticated, SolicitacaoController.encaminha);
+router.put("/solicitacoes/aprovar/:id", ensureAuthenticated, SolicitacaoController.aprova);
+router.get("/solicitacoes/:id", ensureAuthenticated, SolicitacaoController.getById);
+router.get("/solicitacoes/cancelar/:id", ensureAuthenticated, SolicitacaoController.cancelar);
 router.delete("/solicitacoes", ensureAuthenticated, SolicitacaoController.deleta);
 router.get("/arquivos/:id", SolicitacaoController.getArquivo);
 router.get("/prints/:id", SolicitacaoController.getPrint);
 router.get("/foto/:matricula", SolicitacaoController.getFoto);
+router.get("/seed", SeedController.seed);
 //ENVIAR EMAIL
 router.post("/email", EmailController.enviaEmail);
 router.get("/clock", (req, res) => {

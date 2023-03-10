@@ -88,10 +88,9 @@ const Sistemas = () => {
       setItem({ ...item });
       setMode("View");
     };
-    const cantInsert = mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || usuario.role === "ROLE_VISITANTE";
-    const cantEdit =
-      mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || item.id === undefined || usuario.role === "ROLE_VISITANTE";
-    const cantView = mode === "Edit" || mode === "Insert" || mode === "Agendamentos" || item.id === undefined;
+    const cantInsert = mode === "Edit" || mode === "Insert" || !usuario.isDev;
+    const cantEdit = mode === "Edit" || mode === "Insert" || item.id === undefined || !usuario.isDev;
+    const cantView = mode === "Edit" || mode === "Insert" || item.id === undefined;
     return (
       <>
         <Button className="rounded-0" label="Novo" icon="new" disabled={cantInsert} onClick={handleNew} />

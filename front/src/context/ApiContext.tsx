@@ -30,6 +30,7 @@ type ApiType = {
   //SOLICITACOES
   getSolicitacaoById: (id: number, callback: (solicitacao: Solicitacao) => any) => Promise<void>;
   getSolicitacoes: (callback: (list: Solicitacao[]) => any) => Promise<void>;
+  getSolicitacoesAguardando: (callback: (list: Solicitacao[]) => any) => Promise<void>;
   getSolicitacoesPendentes: (callback: (list: Solicitacao[]) => any) => Promise<void>;
   getSolicitacoesResolvidas: (callback: (list: Solicitacao[]) => any) => Promise<void>;
   getSolicitacoesByUser: (callback: (list: Solicitacao[]) => any) => Promise<void>;
@@ -38,6 +39,8 @@ type ApiType = {
   putSolicitacao: (dev: FormData, callback: () => any) => Promise<void>;
   deleteSolicitacao: (dev: Solicitacao, callback: () => any) => Promise<void>;
   cancelarSolicitacao: (id: number, callback: () => any) => Promise<void>;
+  aprovarSolicitacao: (id: number, callback: () => any) => Promise<void>;
+  encaminharSolicitacao: (id: number, id_dev: number, callback: () => any) => Promise<void>;
   //USUARIO
   getUsuarios: (callback: (item: User[]) => any) => void;
   getUsuarioById: (id: number, callback: (userProps: { username: string; name: string }) => void) => void;
@@ -352,6 +355,21 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         else alert.error("Erro o acessar servidor");
       });
   };
+  const getSolicitacoesAguardando = async (callback: (list: Solicitacao[]) => {}) => {
+    setLoading(true);
+    api
+      .get("solicitacoesAguardando")
+      .then((resp) => {
+        callback(resp.data);
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
   const getSolicitacoesPendentes = async (callback: (list: Solicitacao[]) => {}) => {
     setLoading(true);
     api
@@ -470,6 +488,42 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
     setLoading(true);
     api
       .get("solicitacoes/cancelar/" + id.toString())
+      .then((resp) => {
+        setLoading(false);
+        if (resp.status === 200) {
+          alert.success(resp.data.message);
+          callback();
+        }
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const aprovarSolicitacao = async (id: number, callback: () => any) => {
+    setLoading(true);
+    api
+      .put("solicitacoes/aprovar/" + id.toString())
+      .then((resp) => {
+        setLoading(false);
+        if (resp.status === 200) {
+          alert.success(resp.data.message);
+          callback();
+        }
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") console.log(resp.data);
+      })
+      .catch((error) => {
+        setLoading(false);
+        if (error.response.status === 400 && error.response.data) alert.error(error.response.data.message);
+        else alert.error("Erro o acessar servidor");
+      });
+  };
+  const encaminharSolicitacao = async (id_dev: number, id_solicitacao: number, callback: () => any) => {
+    setLoading(true);
+    api
+      .put("solicitacoes/encaminhar", { id_dev, id_solicitacao })
       .then((resp) => {
         setLoading(false);
         if (resp.status === 200) {
@@ -717,6 +771,7 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         //SOLICITACOES
         getSolicitacaoById,
         getSolicitacoes,
+        getSolicitacoesAguardando,
         getSolicitacoesPendentes,
         getSolicitacoesResolvidas,
         getSolicitacoesByUser,
@@ -725,6 +780,8 @@ export const ApiContextProvider = (props: ApiContextProviderProps) => {
         putSolicitacao,
         deleteSolicitacao,
         cancelarSolicitacao,
+        aprovarSolicitacao,
+        encaminharSolicitacao,
         //USUARIO
         getUsuarios,
         postUsuario,

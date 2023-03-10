@@ -4,7 +4,7 @@ import { Dev } from "../types";
 const DevService = {
   listaDevs: async () => {
     try {
-      let results = await prismaClient.dev.findMany({ orderBy: { nome: "asc" } });
+      let results = await prismaClient.dev.findMany({ orderBy: { id: "asc" } });
       return results;
     } catch (e) {
       console.log(e);

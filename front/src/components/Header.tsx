@@ -7,7 +7,7 @@ import logo from "../assets/NovoLogo.png";
 import logoSistemati from "../assets/sistemati-logo.png";
 import useModule from "./Module/context";
 import { useState, Fragment } from "react";
-import { hasAcess } from "../utils/functions";
+import { hasAcessMenu } from "../utils/functions";
 
 const Header = () => {
   const [showModal, setShowModal] = useState(false);
@@ -25,7 +25,7 @@ const Header = () => {
       <img src={logo} width="40" alt="logo" className="m-1" />
       <div className="d-flex flex-column">
         <button className="header-title bg-primary border-0" onClick={() => navigate("/")}>
-          <img src={logoSistemati} height={32} alt="logo aproximati" className="m-1" />
+          <img src={logoSistemati} height={32} alt="logo sistemati" className="m-1" />
         </button>
         <span className="pill" style={{ marginTop: -8 }}>
           {versao}
@@ -34,7 +34,7 @@ const Header = () => {
       <div className="collapse navbar-collapse">
         <ul className="navbar-nav me-auto">
           {menus.map((menu, i) => {
-            if (menu.path && hasAcess(usuario, menu))
+            if (menu.path && hasAcessMenu(usuario, menu))
               return (
                 <li
                   className="nav-item"

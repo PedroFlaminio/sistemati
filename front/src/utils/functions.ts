@@ -19,13 +19,20 @@ export const isJwtExpired = (token: string) => {
   return isJwtExpired;
 };
 
-export const hasAcess = (usuario: User, menu: Menu) => {
+export const hasAcessMenu = (usuario: User, menu: Menu) => {
+  if (menu.dev === false && usuario.isDev) return false;
   if (usuario.isDev) return true;
   if (menu.dev) return false;
   if (usuario.isAdm) return true;
   if (menu.adm) return false;
   if (!menu.roles) return true;
   if (menu.roles.indexOf(usuario.role) > -1) return true;
+};
+
+export const hasAcess = (usuario: User, roles: string[]) => {
+  if (usuario.isDev) return true;
+  if (usuario.isAdm) return true;
+  if (roles.indexOf(usuario.role) > -1) return true;
 };
 
 export const GetItemProp = (item: { [key: string]: any } | undefined, fieldName: string) => {

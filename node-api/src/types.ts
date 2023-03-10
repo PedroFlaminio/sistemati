@@ -54,7 +54,7 @@ export type Sistema = {
   id_responsavel?: number;
   id_reserva?: number;
   nome: string;
-  versao: string;
+  versao?: string;
   banco: string;
   ip: string;
   ip_homolog: string;
@@ -63,7 +63,7 @@ export type Sistema = {
   responsavel?: Dev;
   reserva?: Dev;
   ativo: boolean;
-  solicitacoes: Solicitacao[];
+  solicitacoes?: Solicitacao[];
 };
 
 export type Solicitacao = {

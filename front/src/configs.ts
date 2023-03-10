@@ -5,7 +5,8 @@ export const versao = "Versão: 1.1.0";
 export const menus: Menu[] = [
   { label: "Minhas Solicitações ", path: "/minhasSolicitacoes" },
   { label: "Minhas Pendências", path: "/minhasPendencias", dev: true },
-  { label: "Solicitações Pendentes", path: "/solicitacoesPendentes", roles: ["APROVADOR"] },
+  { label: "Aguardando Aprovação", path: "/solicitacoesAguardando", roles: ["APROVADOR"], dev: false },
+  { label: "Solicitações Pendentes", path: "/solicitacoesPendentes", dev: true },
   { label: "Lista Completa", path: "/solicitacoes", roles: ["APROVADOR"] },
   { label: "Sistemas", path: "/sistemas", roles: ["APROVADOR"] },
   { label: "Devs", path: "/devs", roles: ["APROVADOR"] },

@@ -4,24 +4,77 @@ import { Solicitacao, User } from "../types";
 import fs from "fs";
 import path from "path";
 import { io } from "../app";
-
+const STATUS = {
+  aguardando: "Aguardando aprovação",
+  nova: "Nova",
+  analise: "Em Análise",
+  andamento: "Em Andamento",
+  espera: "Em Espera",
+  cancelada: "Cancelada",
+  resolvida: "Resolvida",
+};
 export const SolicitacaoService = {
   cancelar: async (id: number, user: User) => {
     try {
       let { nome, username, email, matricula = 0 } = user;
       let results = await prismaClient.solicitacao.update({
         where: { id },
-        data: { status: "Cancelado" },
+        data: { status: STATUS.cancelada },
       });
       await prismaClient.historicoSolicitacao.create({
         data: {
-          descricao: "Cancelamento do solicitação",
+          descricao: "Cancelamento da solicitação",
           nome,
           username,
           matricula,
           solicitacao: { connect: { id } },
         },
       });
+      return results;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
+  encaminha: async (id_dev: number, id: number, user: User) => {
+    try {
+      let { nome, username, matricula = 0 } = user;
+      let results = await prismaClient.solicitacao.update({
+        where: { id },
+        data: { status: STATUS.analise, dev: { connect: { id: id_dev } } },
+      });
+      await prismaClient.historicoSolicitacao.create({
+        data: {
+          descricao: "Encaminhamento da solicitação",
+          nome,
+          username,
+          matricula,
+          solicitacao: { connect: { id } },
+        },
+      });
+      return results;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
+  aprova: async (id: number, user: User) => {
+    try {
+      let { nome, username, matricula = 0 } = user;
+      let results = await prismaClient.solicitacao.update({
+        where: { id },
+        data: { status: STATUS.nova },
+      });
+      await prismaClient.historicoSolicitacao.create({
+        data: {
+          descricao: "Aprovação da solicitação",
+          nome,
+          username,
+          matricula,
+          solicitacao: { connect: { id } },
+        },
+      });
+      io.of("/sistemati-api/io").emit("solicitacoes", "novaSolicitacao");
       return results;
     } catch (e) {
       console.log(e);
@@ -53,26 +106,27 @@ export const SolicitacaoService = {
       return false;
     }
   },
+  listaSolicitacoesAguardando: async () => {
+    try {
+      let results = await prismaClient.solicitacao.findMany({
+        where: { status: STATUS.aguardando },
+        include: { sistema: { include: { responsavel: true, reserva: true } }, dev: true },
+        orderBy: { dataCriacao: "asc" },
+      });
+      return results;
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
+  },
   listaSolicitacoesPendentes: async () => {
     try {
       let results = await prismaClient.solicitacao.findMany({
-        where: { NOT: { OR: [{ status: "Resolvido" }, { status: "Cancelado" }] }, OR: [{ dev: null }, { id_dev: 0 }] },
-        include: { sistema: true, dev: true },
+        where: { status: STATUS.nova, OR: [{ dev: null }, { id_dev: 0 }] },
+        include: { sistema: { include: { responsavel: true, reserva: true } }, dev: true },
         orderBy: { dataCriacao: "asc" },
       });
-      const ordenados = [];
-      for (let index = 0; index < results.length; index++) {
-        const element = results[index];
-        let ordem = 0;
-        if (element.criticidade === "Média") ordem += 1;
-        else if (element.criticidade === "Grave") ordem += 3;
-        else if (element.criticidade === "Urgente") ordem += 5;
-        if (element.solicitado_diretor) ordem += 1;
-        ordenados.push({ ...element, ordem });
-      }
-      ordenados.sort((a, b) => a.ordem);
-      //console.log(ordenados);
-      return ordenados;
+      return results;
     } catch (e) {
       console.log(e);
       return false;
@@ -80,7 +134,7 @@ export const SolicitacaoService = {
   },
   listaSolicitacoesResolvidas: async () => {
     try {
-      let results = await prismaClient.solicitacao.findMany({ where: { status: "Resolvido" }, include: { sistema: true, dev: true } });
+      let results = await prismaClient.solicitacao.findMany({ where: { status: STATUS.resolvida }, include: { sistema: true, dev: true } });
       return results;
     } catch (e) {
       console.log(e);
@@ -108,17 +162,18 @@ export const SolicitacaoService = {
   },
   insereSolicitacao: async (solicitacao: Solicitacao, files: any, user: User) => {
     try {
-      const { id, id_sistema, id_dev, dev, sistema, dataCriacao, historicos, arquivos, ...otheProps } = solicitacao;
+      const { id, id_sistema, id_dev, dev, sistema, dataCriacao, historicos, arquivos, status, ...otheProps } = solicitacao;
       let { nome, username, email, matricula = 0 } = user;
       if (matricula === null) matricula = 0;
       const newSolicitacao = await prismaClient.solicitacao.create({
         data: {
           ...otheProps,
-          sistema: { connect: { id: id_sistema } },
+          sistema: otheProps.tipo === "Melhoria" ? { connect: { id: id_sistema } } : undefined,
           nome,
           username,
           email,
           matricula,
+          status: ["Melhoria", "Novo Sistema"].indexOf(otheProps.tipo) >= 0 ? STATUS.aguardando : "Nova",
         },
       });
       await prismaClient.historicoSolicitacao.create({
@@ -146,7 +201,7 @@ export const SolicitacaoService = {
           fs.copyFileSync(element.path, path.join(process.env.FOLDER, nomeArquivo));
         }
       }
-      io.of("/sistemati-api").emit("solicitacoes", "novaSolicitacao");
+      if (["Melhoria", "Novo Sistema"].indexOf(otheProps.tipo) < 0) io.of("/sistemati-api/io").emit("solicitacoes", "novaSolicitacao");
       return true;
     } catch (e) {
       console.log(e);

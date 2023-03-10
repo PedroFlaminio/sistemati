@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "solicitacao" (
     "id" SERIAL NOT NULL,
-    "id_sistema" INTEGER NOT NULL,
+    "id_sistema" INTEGER,
     "id_dev" INTEGER NOT NULL DEFAULT 0,
     "matricula" INTEGER NOT NULL DEFAULT 0,
     "username" TEXT NOT NULL DEFAULT '',
@@ -87,7 +87,7 @@ CREATE TABLE "dev" (
 );
 
 -- AddForeignKey
-ALTER TABLE "solicitacao" ADD CONSTRAINT "solicitacao_id_sistema_fkey" FOREIGN KEY ("id_sistema") REFERENCES "sistema"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "solicitacao" ADD CONSTRAINT "solicitacao_id_sistema_fkey" FOREIGN KEY ("id_sistema") REFERENCES "sistema"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "solicitacao" ADD CONSTRAINT "solicitacao_id_dev_fkey" FOREIGN KEY ("id_dev") REFERENCES "dev"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
